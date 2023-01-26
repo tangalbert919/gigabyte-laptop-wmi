@@ -27,15 +27,24 @@ MODULE_LICENSE("GPL");
 #define WMI_METHOD_WMBC "ABBC0F6F-8EA1-11D1-00A0-C90629100000" // Seems to only return values
 #define WMI_METHOD_WMBD "ABBC0F75-8EA1-11D1-00A0-C90629100000" // Will probably do most of the work.
 #define WMI_EVENT_GUID "ABBC0F72-8EA1-11D1-00A0-C90629100000"
+#define WMI_WMBC_METHOD "\\_SB.PCI0.AMW0.WMBC"
+
+/* _SB_.WFDE._WDG */
+#define WMI_EVENT_WFDE "A6FEA33E-DABF-46F5-BFC8-460D961BEC9F"
+
+/* Fan modes (only tested on Aero 15 Classic-XA) */
+#define FAN_SILENT_MODE 0x57
+#define FAN_CUSTOM_MODE 0x70
+#define FAN_GAMING_MODE 0x71
+
+/* WMBC method IDs */
+#define CPUTEMP 0xE1
+#define GPUTEMP 0xE2
+#define FAN1RPM 0xE4
+#define FAN2RPM 0xE5
 
 static const struct key_entry gigabyte_laptop_keymap[] = {
 
-};
-
-struct bios_args {
-    u32 arg0;
-    u32 arg1;
-    u32 arg2;
 };
 
 struct gigabyte_laptop_wmi {
@@ -43,6 +52,42 @@ struct gigabyte_laptop_wmi {
 };
 
 static struct platform_device *platform_device;
+
+/* The WMBC method is used here. */
+static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, int *result)
+{
+    union acpi_object args[3];
+    acpi_status status;
+    acpi_handle handle;
+    struct acpi_object_list params;
+    struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
+
+    status = acpi_get_handle(NULL, (acpi_string) WMI_WMBC_METHOD, &handle);
+    if (ACPI_FAILURE(status)) {
+        pr_err("Cannot get handle\n");
+        return -1;
+    }
+
+    args[0].type = ACPI_TYPE_INTEGER;
+    args[0].integer.value = 0;
+    args[1].type = ACPI_TYPE_INTEGER;
+    args[1].integer.value = arg1;
+    args[2].type = ACPI_TYPE_INTEGER;
+    args[2].integer.value = 0;
+    params.count = 3;
+    params.pointer = &args;
+
+    status = acpi_evaluate_object(handle, NULL, &params, &buffer);
+    if (ACPI_FAILURE(status))
+        return -1;
+
+    union acpi_object *obj = buffer.pointer;
+    if (obj && obj->type == ACPI_TYPE_INTEGER)
+        *result = obj->integer.value;
+    else
+        return -EIO;
+	return 0;
+}
 
 static void gigabyte_laptop_notify(u32 value, void *context)
 {
