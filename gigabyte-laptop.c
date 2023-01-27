@@ -132,7 +132,7 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 /* The WMBC method is used here. */
 static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, int *result)
 {
-	union acpi_object args[3];
+	union acpi_object args[3], *obj;
 	acpi_status status;
 	acpi_handle handle;
 	struct acpi_object_list params;
@@ -151,17 +151,19 @@ static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, in
 	args[2].type = ACPI_TYPE_INTEGER;
 	args[2].integer.value = 0;
 	params.count = 3;
-	params.pointer = &args;
+	params.pointer = args;
 
 	status = acpi_evaluate_object(handle, NULL, &params, &buffer);
 	if (ACPI_FAILURE(status))
 		return -1;
 
-	union acpi_object *obj = buffer.pointer;
+	*obj = buffer.pointer;
 	if (obj && obj->type == ACPI_TYPE_INTEGER)
 		*result = obj->integer.value;
-	else
-		return -EIO;
+	else {
+		kfree(obj);
+		return -EINVAL;
+	}
 	return 0;
 }
 
