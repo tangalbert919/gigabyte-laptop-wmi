@@ -8,6 +8,8 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/acpi.h>
+#include <linux/hwmon.h>
+#include <linux/hwmon-sysfs.h>
 #include <linux/init.h>
 #include <linux/input.h>
 #include <linux/kernel.h>
@@ -52,6 +54,80 @@ struct gigabyte_laptop_wmi {
 };
 
 static struct platform_device *platform_device;
+
+/* hwmon */
+static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sensor_types type,
+					u32 attr, int channel)
+{
+	return 0;
+}
+
+static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
+					u32 attr, int channel, long *val)
+{
+	// TODO: Implement
+	return 0;
+}
+
+static int gigabyte_laptop_hwmon_write(struct device _dev, enum hwmon_sensor_types type,
+					u32 attr, int channel, long val)
+{
+	// Probably won't be used.
+	return 0;
+}
+
+static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
+	HWMON_CHANNEL_INFO(temp,
+				HWMON_T_INPUT,
+				HWMON_T_INPUT,
+				HWMON_T_INPUT),
+	HWMON_CHANNEL_INFO(fan,
+				HWMON_F_INPUT | HWMON_F_LABEL,
+				HWMON_F_INPUT | HWMON_F_LABEL),
+	NULL
+};
+
+static const struct hwmon_ops gigabyte_laptop_hwmon_ops = {
+	.read = gigabyte_laptop_hwmon_read,
+	//.write = gigabyte_laptop_hwmon_write,
+	.is_visible = gigabyte_laptop_hwmon_is_visible,
+};
+
+static const struct hwmon_chip_info gigabyte_laptop_chip_info = {
+	.ops = &gigabyte_laptop_hwmon_ops,
+	.info = gigabyte_laptop_hwmon_info,
+};
+
+/* sysfs methods */
+static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	// TODO: Implement
+	return sysfs_emit(buf, "%d\n", 0);
+}
+
+static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	// TODO: Implement
+	return 0;
+}
+
+static DEVICE_ATTR_RW(fan_mode);
+//static DEVICE_ATTR_RW(fan_custom_speed);
+//static DEVICE_ATTR_RW(charge_mode);
+//static DEVICE_ATTR_RW(charge_limit);
+
+static struct attribute *gigabyte_laptop_attributes[] = {
+	&dev_attr_fan_mode.attr,
+	//&dev_attr_fan_custom_speed.attr,
+	//&dev_attr_charge_mode.attr,
+	//&dev_attr_charge_limit.attr,
+	NULL
+};
+
+static const struct attribute_group gigabyte_laptop_attr_group = {
+	//.is_visible = gigabyte_laptop_sysfs_is_visible,
+	.attrs = gigabyte_laptop_attributes,
+};
 
 /* The WMBC method is used here. */
 static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, int *result)
