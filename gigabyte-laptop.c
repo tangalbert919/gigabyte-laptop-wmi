@@ -153,7 +153,7 @@ static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, in
 	if (ACPI_FAILURE(status))
 		return -1;
 
-	*obj = buffer.pointer;
+	obj = buffer.pointer;
 	if (obj && obj->type == ACPI_TYPE_INTEGER)
 		*result = obj->integer.value;
 	else {
