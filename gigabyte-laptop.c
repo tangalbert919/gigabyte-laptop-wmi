@@ -176,6 +176,7 @@ static void __exit gigabyte_laptop_exit(void)
 
 	pr_info("Goodbye, World!\n");
 	gigabyte = platform_get_drvdata(platform_device);
+	sysfs_remove_group(&platform_device->dev.kobj, &gigabyte_laptop_attr_group);
 	platform_driver_unregister(&platform_driver);
 	platform_device_unregister(platform_device);
 	kfree(gigabyte);
@@ -217,9 +218,15 @@ static int __init gigabyte_laptop_init(void)
 		return result;
 	}
 
+	result = sysfs_create_group(&platform_device->dev.kobj,
+					&gigabyte_laptop_attr_group);
+	if (result)
+		goto fail_sysfs;
 	pr_info("Hello, World!\n");
 	return 0;
 
+fail_sysfs:
+	platform_device_del(platform_device);
 fail_platform_device:
 	platform_device_put(platform_device);
 	return result;
