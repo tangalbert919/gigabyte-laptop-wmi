@@ -29,7 +29,6 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 /* _SB_.PCI0.AMW0._WDG */
 #define WMI_METHOD_WMBC "ABBC0F6F-8EA1-11D1-00A0-C90629100000" // Seems to only return values
 #define WMI_METHOD_WMBD "ABBC0F75-8EA1-11D1-00A0-C90629100000" // Will probably do most of the work.
-#define WMI_EVENT_GUID "ABBC0F72-8EA1-11D1-00A0-C90629100000"
 #define WMI_WMBC_METHOD "\\_SB.PCI0.AMW0.WMBC"
 
 /* _SB_.WFDE._WDG */
@@ -45,10 +44,6 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define GPUTEMP 0xE2
 #define FAN1RPM 0xE4
 #define FAN2RPM 0xE5
-
-static const struct key_entry gigabyte_laptop_keymap[] = {
-
-};
 
 struct gigabyte_laptop_wmi {
 	struct input_dev *inputdev;
@@ -168,71 +163,6 @@ static int gigabyte_laptop_get_devstate(u32 arg1, struct acpi_buffer *output, in
 	return 0;
 }
 
-static void gigabyte_laptop_notify(u32 value, void *context)
-{
-	struct gigabyte_laptop_wmi *gigabyte = context;
-	struct acpi_buffer response = { ACPI_ALLOCATE_BUFFER, NULL };
-	union acpi_object *obj;
-	acpi_status status;
-	int code;
-
-	status = wmi_get_event_data(value, &response);
-	if (status != AE_OK) {
-		pr_err("bad event status 0x%x\n", status);
-		return;
-	}
-
-	obj = (union acpi_object *)response.pointer;
-
-	if (obj && obj->type == ACPI_TYPE_INTEGER) {
-		code = obj->integer.value;
-
-		if (!sparse_keymap_report_event(gigabyte->inputdev, code, 1, true))
-			pr_info("Unknown key %x pressed\n", code);
-	}
-
-	kfree(obj);
-}
-
-static int gigabyte_laptop_input_setup(struct gigabyte_laptop_wmi *gigabyte)
-{
-	int err;
-
-	gigabyte->inputdev = input_allocate_device();
-	if (!gigabyte->inputdev)
-		return -ENOMEM;
-
-	gigabyte->inputdev->name = "Gigabyte laptop WMI hotkeys";
-	gigabyte->inputdev->phys = GIGABYTE_LAPTOP_FILE "/input0";
-	gigabyte->inputdev->id.bustype = BUS_HOST;
-	gigabyte->inputdev->dev.parent = &platform_device->dev;
-
-	err = sparse_keymap_setup(gigabyte->inputdev, gigabyte_laptop_keymap, NULL);
-	if (err) {
-		pr_err("Unable to setup input device keymap\n");
-		goto err_free_dev;
-	}
-
-	err = input_register_device(gigabyte->inputdev);
-	if (err) {
-		pr_err("Unable to register input device\n");
-		goto err_free_dev;
-	}
-
-	return 0;
-
-err_free_dev:
-	input_free_device(gigabyte->inputdev);
-	return err;
-}
-
-static void gigabyte_laptop_input_exit(struct gigabyte_laptop_wmi *gigabyte)
-{
-	if (gigabyte->inputdev)
-		input_unregister_device(gigabyte->inputdev);
-	gigabyte->inputdev = NULL;
-}
-
 static struct platform_driver platform_driver = {
 	.driver = {
 		.name = GIGABYTE_LAPTOP_FILE,
@@ -245,22 +175,18 @@ static void __exit gigabyte_laptop_exit(void)
 	struct gigabyte_laptop_wmi *gigabyte;
 
 	pr_info("Goodbye, World!\n");
-	wmi_remove_notify_handler(WMI_EVENT_GUID);
 	gigabyte = platform_get_drvdata(platform_device);
 	platform_driver_unregister(&platform_driver);
 	platform_device_unregister(platform_device);
-	gigabyte_laptop_input_exit(gigabyte);
 	kfree(gigabyte);
 }
 
 static int __init gigabyte_laptop_init(void)
 {
 	struct gigabyte_laptop_wmi *gigabyte;
-	acpi_status status;
 	int result;
 
-	if (!wmi_has_guid(WMI_EVENT_GUID) ||
-		!wmi_has_guid(WMI_METHOD_WMBC) ||
+	if (!wmi_has_guid(WMI_METHOD_WMBC) ||
 		!wmi_has_guid(WMI_METHOD_WMBD)) {
 		pr_warn("No known WMI GUID found!\n");
 		return -ENODEV;
@@ -289,18 +215,6 @@ static int __init gigabyte_laptop_init(void)
 	if (result) {
 		pr_warn("Unable to register platform driver\n");
 		return result;
-	}
-
-	// Probably move this somewhere else.
-	result = gigabyte_laptop_input_setup(gigabyte);
-	if (result)
-		return result;
-	
-	status = wmi_install_notify_handler(WMI_EVENT_GUID,
-									gigabyte_laptop_notify, gigabyte);
-	if (ACPI_FAILURE(status)) {
-		gigabyte_laptop_input_exit(gigabyte);
-		return -ENODEV;
 	}
 
 	pr_info("Hello, World!\n");
