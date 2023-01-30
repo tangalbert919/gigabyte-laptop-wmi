@@ -46,7 +46,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN2RPM 0xE5
 
 struct gigabyte_laptop_wmi {
-	struct input_dev *inputdev;
+	struct device *hwmon_dev;
+	int fan_mode;
 };
 
 static struct platform_device *platform_device;
@@ -95,16 +96,36 @@ static const struct hwmon_chip_info gigabyte_laptop_chip_info = {
 };
 
 /* sysfs methods */
+
+/*
+ * Show fan mode.
+ * 0 = normal fan mode
+ * 1 = silent fan mode
+ * 2 = gaming fan mode
+ * 3 = custom fan mode
+ * 4 = failed to get fan mode
+ */
 static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	// TODO: Implement
-	return sysfs_emit(buf, "%d\n", 0);
+	/*int ret, output;
+
+	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
+	if (!ret)
+		return sysfs_emit(buf, "%d\n", 4);*/
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	gigabyte = platform_get_drvdata(platform_device);
+	return sysfs_emit(buf, "%d\n", gigabyte->fan_mode);
 }
 
 static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
 	// TODO: Implement
-	return 0;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	gigabyte = platform_get_drvdata(platform_device);
+	sscanf(buf, "%d\n", &gigabyte->fan_mode);
+	return count;
 }
 
 static DEVICE_ATTR_RW(fan_mode);
