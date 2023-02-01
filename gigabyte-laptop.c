@@ -27,11 +27,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 /* _SB_.PCI0.AMW0._WDG */
 #define WMI_METHOD_WMBC "ABBC0F6F-8EA1-11D1-00A0-C90629100000" // Seems to only return values
 #define WMI_METHOD_WMBD "ABBC0F75-8EA1-11D1-00A0-C90629100000" // Will probably do most of the work.
-#define WMI_WMBC_METHOD "\\_SB.PCI0.AMW0.WMBC"
-#define WMI_WMBD_METHOD "\\_SB.PCI0.AMW0.WMBD"
-
-/* _SB_.WFDE._WDG */
-#define WMI_EVENT_WFDE "A6FEA33E-DABF-46F5-BFC8-460D961BEC9F"
+#define WMI_STRING_WMBC "\\_SB.PCI0.AMW0.WMBC"
+#define WMI_STRING_WMBD "\\_SB.PCI0.AMW0.WMBD"
 
 /* Fan modes (only tested on Aero 15 Classic-XA) */
 #define FAN_SILENT_MODE 0x57
@@ -62,7 +59,7 @@ static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
 	struct acpi_object_list params;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
-	status = acpi_get_handle(NULL, (acpi_string) WMI_WMBC_METHOD, &handle);
+	status = acpi_get_handle(NULL, (acpi_string) WMI_STRING_WMBC, &handle);
 	if (ACPI_FAILURE(status)) {
 		pr_err("Cannot get handle\n");
 		return -1;
@@ -101,7 +98,7 @@ static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 	struct acpi_object_list params;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 
-	status = acpi_get_handle(NULL, (acpi_string) WMI_WMBD_METHOD, &handle);
+	status = acpi_get_handle(NULL, (acpi_string) WMI_STRING_WMBD, &handle);
 	if (ACPI_FAILURE(status)) {
 		pr_err("Cannot get handle\n");
 		return -1;
