@@ -11,11 +11,9 @@
 #include <linux/hwmon.h>
 #include <linux/hwmon-sysfs.h>
 #include <linux/init.h>
-#include <linux/input.h>
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/module.h>
-#include <linux/input/sparse-keymap.h>
 #include <linux/wmi.h>
 
 #define GIGABYTE_LAPTOP_VERSION "0.01"
