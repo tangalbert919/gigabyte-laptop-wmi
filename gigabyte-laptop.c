@@ -88,6 +88,7 @@ static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
 		kfree(obj);
 		return -EINVAL;
 	}
+	kfree(obj);
 	return 0;
 }
 
@@ -126,6 +127,7 @@ static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 		kfree(obj);
 		return -EINVAL;
 	}
+	kfree(obj);
 	return 0;
 }
 
