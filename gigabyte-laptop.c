@@ -183,15 +183,37 @@ static const struct hwmon_chip_info gigabyte_laptop_chip_info = {
  */
 static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	/*int ret, output;
+	int ret, output;
+	int fan_mode = 0;
 
 	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
-	if (!ret)
-		return sysfs_emit(buf, "%d\n", 4);*/
-	struct gigabyte_laptop_wmi *gigabyte;
+	if (ret)
+		return sysfs_emit(buf, "%d\n", 4);
+	else if (output) {
+		fan_mode = 1;
+		goto fan_mode_not_normal;
+	}
 
-	gigabyte = platform_get_drvdata(platform_device);
-	return sysfs_emit(buf, "%d\n", gigabyte->fan_mode);
+	ret = gigabyte_laptop_get_devstate(FAN_GAMING_MODE, &output);
+	if (ret)
+		return sysfs_emit(buf, "%d\n", 4);
+	else if (output) {
+		fan_mode = 2;
+		goto fan_mode_not_normal;
+	}
+
+	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
+	if (ret)
+		return sysfs_emit(buf, "%d\n", 4);
+	else if (output) {
+		fan_mode = 3;
+		goto fan_mode_not_normal;
+	}
+	//struct gigabyte_laptop_wmi *gigabyte;
+
+	//gigabyte = platform_get_drvdata(platform_device);
+fan_mode_not_normal:
+	return sysfs_emit(buf, "%d\n", fan_mode);
 }
 
 static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
