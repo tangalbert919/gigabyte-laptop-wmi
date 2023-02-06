@@ -185,7 +185,9 @@ static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, 
 {
 	int ret, output;
 	int fan_mode = 0;
+	struct gigabyte_laptop_wmi *gigabyte;
 
+	gigabyte = platform_get_drvdata(platform_device);
 	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
 	if (ret)
 		return sysfs_emit(buf, "%d\n", 4);
@@ -202,17 +204,16 @@ static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, 
 		goto fan_mode_not_normal;
 	}
 
-	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
+	/*ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
 	if (ret)
 		return sysfs_emit(buf, "%d\n", 4);
 	else if (output) {
 		fan_mode = 3;
 		goto fan_mode_not_normal;
-	}
-	//struct gigabyte_laptop_wmi *gigabyte;
+	}*/
 
-	//gigabyte = platform_get_drvdata(platform_device);
 fan_mode_not_normal:
+	gigabyte->fan_mode = fan_mode;
 	return sysfs_emit(buf, "%d\n", fan_mode);
 }
 
