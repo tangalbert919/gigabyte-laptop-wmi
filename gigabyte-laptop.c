@@ -30,7 +30,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define WMI_STRING_WMBC "\\_SB.PCI0.AMW0.WMBC"
 #define WMI_STRING_WMBD "\\_SB.PCI0.AMW0.WMBD"
 
-/* Fan modes (only tested on Aero 15 Classic-XA) */
+/* Fan modes */
 #define FAN_SILENT_MODE 0x57
 #define FAN_CUSTOM_MODE 0x70
 #define FAN_GAMING_MODE 0x71
@@ -44,6 +44,9 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 struct gigabyte_laptop_wmi {
 	struct device *hwmon_dev;
 	int fan_mode;
+	int fan_custom_speed;
+	int charge_mode;
+	int charge_limit;
 };
 
 static struct platform_device *platform_device;
@@ -209,6 +212,7 @@ static int set_fan_mode(u32 fan_mode)
 	}
 	return 0;
 }
+
 static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte;
@@ -251,16 +255,64 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 	return count;
 }
 
+/*
+ * Custom fan speed. Only works if custom mode is enabled.
+ *
+ */
+static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	// TODO: Implement
+	return sysfs_emit(buf, "%d\n", 0);
+}
+
+static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	// TODO: Implement
+	return count;
+}
+
+/*
+ * Charge mode.
+ * 0 = default mode
+ * 1 = custom mode
+ */
+static ssize_t charge_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	// TODO: Implement
+	return sysfs_emit(buf, "%d\n", 0);
+}
+
+static ssize_t charge_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	// TODO: Implement
+	return count;
+}
+
+/*
+ * Maximum charge limit. Only works if custom charge mode is enabled.
+ */
+static ssize_t charge_limit_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	// TODO: Implement
+	return sysfs_emit(buf, "%d\n", 0);
+}
+
+static ssize_t charge_limit_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	// TODO: Implement
+	return count;
+}
+
 static DEVICE_ATTR_RW(fan_mode);
-//static DEVICE_ATTR_RW(fan_custom_speed);
-//static DEVICE_ATTR_RW(charge_mode);
-//static DEVICE_ATTR_RW(charge_limit);
+static DEVICE_ATTR_RW(fan_custom_speed);
+static DEVICE_ATTR_RW(charge_mode);
+static DEVICE_ATTR_RW(charge_limit);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_mode.attr,
-	//&dev_attr_fan_custom_speed.attr,
-	//&dev_attr_charge_mode.attr,
-	//&dev_attr_charge_limit.attr,
+	&dev_attr_fan_custom_speed.attr,
+	&dev_attr_charge_mode.attr,
+	&dev_attr_charge_limit.attr,
 	NULL
 };
 
