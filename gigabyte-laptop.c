@@ -181,6 +181,34 @@ static const struct hwmon_chip_info gigabyte_laptop_chip_info = {
  * 3 = custom fan mode
  * 4 = failed to get fan mode
  */
+static int set_fan_mode(u32 fan_mode)
+{
+	int ret, result;
+
+	if (fan_mode == FAN_SILENT_MODE) {
+		ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
+		if (ret)
+			return ret;
+		ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
+		if (ret)
+			return ret;
+	} else if (fan_mode == FAN_GAMING_MODE) {
+		ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
+		if (ret)
+			return ret;
+		ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
+		if (ret)
+			return ret;
+	} else if (fan_mode == 0) { // Normal fan mode
+		ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
+		if (ret)
+			return ret;
+		ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
+		if (ret)
+			return ret;
+	}
+	return 0;
+}
 static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int ret, output;
@@ -219,11 +247,35 @@ fan_mode_not_normal:
 
 static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
-	// TODO: Implement
+	int ret;
+	unsigned int fan_mode = 0;
 	struct gigabyte_laptop_wmi *gigabyte;
 
+	ret = kstrtouint(buf, 0, &fan_mode);
+	if (ret) {
+		pr_err("kstrtouint failed\n");
+		return count;
+	}
+
+	if (fan_mode > 3) {
+		pr_err("Invalid fan mode\n");
+		return count;
+	} else if (fan_mode == 2) {
+		ret = set_fan_mode(FAN_GAMING_MODE);
+		if (ret)
+			return ret;
+	} else if (fan_mode == 1) {
+		ret = set_fan_mode(FAN_SILENT_MODE);
+		if (ret)
+			return ret;
+	} else if (fan_mode == 0) {
+		ret = set_fan_mode(0);
+		if (ret)
+			return ret;
+	}
+
 	gigabyte = platform_get_drvdata(platform_device);
-	sscanf(buf, "%d\n", &gigabyte->fan_mode);
+	gigabyte->fan_mode = fan_mode;
 	return count;
 }
 
