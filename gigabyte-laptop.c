@@ -42,6 +42,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_GPU_RPM      0xE5
 
 struct gigabyte_laptop_wmi {
+	struct platform_device *pdev;
 	struct device *hwmon_dev;
 	int fan_mode;
 	int fan_custom_speed;
@@ -217,7 +218,7 @@ static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, 
 {
 	struct gigabyte_laptop_wmi *gigabyte;
 
-	gigabyte = platform_get_drvdata(platform_device);
+	gigabyte = dev_get_drvdata(dev);
 	return sysfs_emit(buf, "%d\n", gigabyte->fan_mode);
 }
 
@@ -250,7 +251,7 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 			return ret;
 	}
 
-	gigabyte = platform_get_drvdata(platform_device);
+	gigabyte = dev_get_drvdata(dev);
 	gigabyte->fan_mode = fan_mode;
 	return count;
 }
@@ -334,9 +335,9 @@ static void __exit gigabyte_laptop_exit(void)
 
 	pr_info("Goodbye, World!\n");
 	gigabyte = platform_get_drvdata(platform_device);
-	sysfs_remove_group(&platform_device->dev.kobj, &gigabyte_laptop_attr_group);
+	sysfs_remove_group(&gigabyte->pdev->dev.kobj, &gigabyte_laptop_attr_group);
 	platform_driver_unregister(&platform_driver);
-	platform_device_unregister(platform_device);
+	platform_device_unregister(gigabyte->pdev);
 	kfree(gigabyte);
 }
 
@@ -362,9 +363,10 @@ static int __init gigabyte_laptop_init(void)
 		return -ENOMEM;
 	}
 
-	platform_set_drvdata(platform_device, gigabyte);
+	gigabyte->pdev = platform_device;
+	platform_set_drvdata(gigabyte->pdev, gigabyte);
 
-	result = platform_device_add(platform_device);
+	result = platform_device_add(gigabyte->pdev);
 	if (result) {
 		pr_warn("Unable to add platform device\n");
 		goto fail_platform_device;
@@ -376,7 +378,7 @@ static int __init gigabyte_laptop_init(void)
 		return result;
 	}
 
-	result = sysfs_create_group(&platform_device->dev.kobj,
+	result = sysfs_create_group(&gigabyte->pdev->dev.kobj,
 					&gigabyte_laptop_attr_group);
 	if (result)
 		goto fail_sysfs;
@@ -384,9 +386,9 @@ static int __init gigabyte_laptop_init(void)
 	return 0;
 
 fail_sysfs:
-	platform_device_del(platform_device);
+	platform_device_del(gigabyte->pdev);
 fail_platform_device:
-	platform_device_put(platform_device);
+	platform_device_put(gigabyte->pdev);
 	return result;
 }
 
