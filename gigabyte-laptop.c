@@ -30,16 +30,16 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define WMI_STRING_WMBC "\\_SB.PCI0.AMW0.WMBC"
 #define WMI_STRING_WMBD "\\_SB.PCI0.AMW0.WMBD"
 
-/* Fan modes */
-#define FAN_SILENT_MODE 0x57
-#define FAN_CUSTOM_MODE 0x70
-#define FAN_GAMING_MODE 0x71
-
-/* WMBC method IDs */
-#define CPUTEMP 0xE1
-#define GPUTEMP 0xE2
-#define FAN1RPM 0xE4
-#define FAN2RPM 0xE5
+/* WMI method arguments */
+#define FAN_SILENT_MODE  0x57
+#define FAN_DEEP_CONTROL 0x67
+#define FAN_CUSTOM_TYPE  0x6A
+#define FAN_CUSTOM_MODE  0x70
+#define FAN_GAMING_MODE  0x71
+#define TEMP_CPU         0xE1
+#define TEMP_GPU         0xE2
+#define FAN_CPU_RPM      0xE4
+#define FAN_GPU_RPM      0xE5
 
 struct gigabyte_laptop_wmi {
 	struct device *hwmon_dev;
