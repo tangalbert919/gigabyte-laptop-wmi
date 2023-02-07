@@ -136,17 +136,84 @@ static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sensor_types type,
 					u32 attr, int channel)
 {
+	switch (type) {
+		case hwmon_temp:
+			switch (attr) {
+				case hwmon_temp_input:
+					return 0444;
+				default:
+					break;
+			}
+			break;
+		case hwmon_fan:
+			switch (attr) {
+				case hwmon_fan_input:
+					return 0444;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+	}
 	return 0;
 }
 
 static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_types type,
 					u32 attr, int channel, long *val)
 {
-	// TODO: Implement
+	int ret, output;
+	u16 fan_rpm;
+
+	switch (type) {
+		case hwmon_temp:
+			switch (channel) {
+				case 0:
+					ret = gigabyte_laptop_get_devstate(TEMP_CPU, &output);
+					if (ret)
+						break;
+					*val = output;
+					break;
+				case 1:
+					ret = gigabyte_laptop_get_devstate(TEMP_GPU, &output);
+					if (ret)
+						break;
+					*val = output;
+					break;
+				default:
+					*val = 0;
+					break;
+			}
+			break;
+		case hwmon_fan:
+			switch (channel) {
+				case 0:
+					ret = gigabyte_laptop_get_devstate(FAN_CPU_RPM, &output);
+					if (ret)
+						break;
+					fan_rpm = output;
+					fan_rpm = rol16(fan_rpm, 8);
+					*val = fan_rpm;
+					break;
+				case 1:
+					ret = gigabyte_laptop_get_devstate(FAN_GPU_RPM, &output);
+					if (ret)
+						break;
+					fan_rpm = output;
+					fan_rpm = rol16(fan_rpm, 8);
+					*val = fan_rpm;
+					break;
+				default:
+					break;
+			}
+			break;
+		default:
+			break;
+	}
 	return 0;
 }
 
-static int gigabyte_laptop_hwmon_write(struct device _dev, enum hwmon_sensor_types type,
+static int gigabyte_laptop_hwmon_write(struct device *dev, enum hwmon_sensor_types type,
 					u32 attr, int channel, long val)
 {
 	// Probably won't be used.
@@ -159,8 +226,8 @@ static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 				HWMON_T_INPUT,
 				HWMON_T_INPUT),
 	HWMON_CHANNEL_INFO(fan,
-				HWMON_F_INPUT | HWMON_F_LABEL,
-				HWMON_F_INPUT | HWMON_F_LABEL),
+				HWMON_F_INPUT,
+				HWMON_F_INPUT),
 	NULL
 };
 
@@ -335,6 +402,7 @@ static void __exit gigabyte_laptop_exit(void)
 
 	pr_info("Goodbye, World!\n");
 	gigabyte = platform_get_drvdata(platform_device);
+	hwmon_device_unregister(gigabyte->hwmon_dev);
 	sysfs_remove_group(&gigabyte->pdev->dev.kobj, &gigabyte_laptop_attr_group);
 	platform_driver_unregister(&platform_driver);
 	platform_device_unregister(gigabyte->pdev);
@@ -382,11 +450,21 @@ static int __init gigabyte_laptop_init(void)
 					&gigabyte_laptop_attr_group);
 	if (result)
 		goto fail_sysfs;
+
+	gigabyte->hwmon_dev = hwmon_device_register_with_info(&gigabyte->pdev->dev,
+			GIGABYTE_LAPTOP_FILE, gigabyte, &gigabyte_laptop_chip_info, NULL);
+	if (IS_ERR(gigabyte->hwmon_dev)) {
+		result = PTR_ERR(gigabyte->hwmon_dev);
+		pr_err("hwmon registration failed with %d\n", result);
+		goto fail_sysfs;
+	}
+
 	pr_info("Hello, World!\n");
 	return 0;
 
 fail_sysfs:
 	platform_device_del(gigabyte->pdev);
+	platform_driver_unregister(&platform_driver);
 fail_platform_device:
 	platform_device_put(gigabyte->pdev);
 	return result;
