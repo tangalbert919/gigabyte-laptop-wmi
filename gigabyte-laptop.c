@@ -133,6 +133,18 @@ static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 }
 
 /* hwmon **************************************************/
+
+/*
+ * Helper method. Reverses byte order of fan RPM.
+ * This is needed, since the embedded controller stores the value in big-endian
+ * while x86 is little-endian.
+ */
+static u16 convert_fan_rpm(int val)
+{
+	u16 fan_rpm = val;
+	return rol16(fan_rpm, 8);
+}
+
 static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sensor_types type,
 					u32 attr, int channel)
 {
@@ -163,7 +175,6 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					u32 attr, int channel, long *val)
 {
 	int ret, output;
-	u16 fan_rpm;
 
 	switch (type) {
 		case hwmon_temp:
@@ -191,17 +202,13 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					ret = gigabyte_laptop_get_devstate(FAN_CPU_RPM, &output);
 					if (ret)
 						break;
-					fan_rpm = output;
-					fan_rpm = rol16(fan_rpm, 8);
-					*val = fan_rpm;
+					*val = convert_fan_rpm(output);
 					break;
 				case 1:
 					ret = gigabyte_laptop_get_devstate(FAN_GPU_RPM, &output);
 					if (ret)
 						break;
-					fan_rpm = output;
-					fan_rpm = rol16(fan_rpm, 8);
-					*val = fan_rpm;
+					*val = convert_fan_rpm(output);
 					break;
 				default:
 					break;
