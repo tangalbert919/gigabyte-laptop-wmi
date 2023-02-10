@@ -32,6 +32,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 
 /* WMI method arguments */
 #define FAN_SILENT_MODE  0x57
+#define CHARGING_MODE    0x64
+#define CHARGING_LIMIT   0x65
 #define FAN_DEEP_CONTROL 0x67
 #define FAN_CUSTOM_TYPE  0x6A
 #define FAN_CUSTOM_MODE  0x70
@@ -365,16 +367,39 @@ static ssize_t charge_mode_store(struct device *dev, struct device_attribute *at
 
 /*
  * Maximum charge limit. Only works if custom charge mode is enabled.
+ * Can be set between 60 and 100 percent.
  */
 static ssize_t charge_limit_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	// TODO: Implement
-	return sysfs_emit(buf, "%d\n", 0);
+	int ret, output;
+
+	ret = gigabyte_laptop_get_devstate(CHARGING_LIMIT, &output);
+	if (ret)
+		return ret;
+	return sysfs_emit(buf, "%d\n", output);
 }
 
 static ssize_t charge_limit_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
-	// TODO: Implement
+	int ret, output;
+	unsigned int limit;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtouint(buf, 0, &limit);
+	if (ret)
+		return ret;
+
+	if (limit > 100 || limit < 60) {
+		pr_err("Invalid charge limit\n");
+		return -EINVAL;
+	}
+
+	ret = gigabyte_laptop_set_devstate(CHARGING_LIMIT, limit, &output);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->charge_limit = limit;
 	return count;
 }
 
