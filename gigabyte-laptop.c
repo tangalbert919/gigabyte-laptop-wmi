@@ -42,6 +42,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define TEMP_GPU         0xE2
 #define FAN_CPU_RPM      0xE4
 #define FAN_GPU_RPM      0xE5
+#define FAN_THREE_RPM    0xE8
+#define FAN_FOUR_RPM     0xE9
 
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
@@ -212,6 +214,18 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 						break;
 					*val = convert_fan_rpm(output);
 					break;
+				case 2:
+					ret = gigabyte_laptop_get_devstate(FAN_THREE_RPM, &output);
+					if (ret)
+						break;
+					*val = convert_fan_rpm(output);
+					break;
+				case 3:
+					ret = gigabyte_laptop_get_devstate(FAN_FOUR_RPM, &output);
+					if (ret)
+						break;
+					*val = convert_fan_rpm(output);
+					break;
 				default:
 					break;
 			}
@@ -235,6 +249,8 @@ static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 				HWMON_T_INPUT,
 				HWMON_T_INPUT),
 	HWMON_CHANNEL_INFO(fan,
+				HWMON_F_INPUT,
+				HWMON_F_INPUT,
 				HWMON_F_INPUT,
 				HWMON_F_INPUT),
 	NULL
