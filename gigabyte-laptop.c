@@ -334,12 +334,18 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 
 /*
  * Custom fan speed. Only works if custom mode is enabled.
- *
+ * Seems to only scale between 68 and 229.
  */
 static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	// TODO: Implement
-	return sysfs_emit(buf, "%d\n", 0);
+	int ret, output;
+	//struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	// We can use FAN_CUSTOM_MODE here because it just returns the custom speed.
+	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
+	if (ret)
+		return ret;
+	return sysfs_emit(buf, "%d\n", output);
 }
 
 static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -355,8 +361,12 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
  */
 static ssize_t charge_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	// TODO: Implement
-	return sysfs_emit(buf, "%d\n", 0);
+	int ret, output;
+
+	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
+	if (ret)
+		return ret;
+	return sysfs_emit(buf, "%d\n", output);
 }
 
 static ssize_t charge_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
