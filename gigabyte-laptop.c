@@ -378,7 +378,26 @@ static ssize_t charge_mode_show(struct device *dev, struct device_attribute *att
 
 static ssize_t charge_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
-	// TODO: Implement
+	int ret, output;
+	unsigned int mode;
+	strict gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtouint(buf, 0, &mode);
+	if (ret)
+		return ret;
+
+	if (mode > 1) {
+		pr_err("Invalid charge mode\n");
+		return -EINVAL;
+	}
+
+	// Only bit 2 affects the charging mode, so shift 2 bits to the left.
+	ret = gigabyte_laptop_set_devstate(CHARGING_MODE, mode << 2, &output);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->charge_mode = mode;
 	return count;
 }
 
