@@ -308,9 +308,8 @@ static int set_fan_mode(u32 fan_mode)
 
 static ssize_t fan_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	struct gigabyte_laptop_wmi *gigabyte;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	gigabyte = dev_get_drvdata(dev);
 	return sysfs_emit(buf, "%d\n", gigabyte->fan_mode);
 }
 
@@ -354,14 +353,9 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
  */
 static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	int ret, output;
-	//struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	// We can use FAN_CUSTOM_MODE here because it just returns the custom speed.
-	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
-	if (ret)
-		return ret;
-	return sysfs_emit(buf, "%d\n", output);
+	return sysfs_emit(buf, "%d\n", gigabyte->fan_custom_speed);
 }
 
 static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -377,12 +371,9 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
  */
 static ssize_t charge_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	int ret, output;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
-	if (ret)
-		return ret;
-	return sysfs_emit(buf, "%d\n", output);
+	return sysfs_emit(buf, "%d\n", gigabyte->charge_mode);
 }
 
 static ssize_t charge_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -397,12 +388,9 @@ static ssize_t charge_mode_store(struct device *dev, struct device_attribute *at
  */
 static ssize_t charge_limit_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	int ret, output;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	ret = gigabyte_laptop_get_devstate(CHARGING_LIMIT, &output);
-	if (ret)
-		return ret;
-	return sysfs_emit(buf, "%d\n", output);
+	return sysfs_emit(buf, "%d\n", gigabyte->charge_limit);
 }
 
 static ssize_t charge_limit_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
