@@ -447,6 +447,54 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 	.attrs = gigabyte_laptop_attributes,
 };
 
+/* Driver init ********************************************/
+
+static int gigabyte_laptop_probe(struct device *dev)
+{
+	int ret, output;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	// Get current fan mode.
+	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
+	if (ret)
+		return ret;
+	else if (output) {
+		gigabyte->fan_mode = 1;
+		goto obtain_custom_fan_speed;
+	}
+		gigabyte->fan_mode = 1;
+	ret = gigabyte_laptop_get_devstate(FAN_GAMING_MODE, &output);
+	if (ret)
+		return ret;
+	else if (output) {
+		gigabyte->fan_mode = 2;
+		goto obtain_custom_fan_speed;
+	}
+	// Neither silent nor gaming mode are active; must be normal fan mode
+	gigabyte->fan_mode = 0;
+
+obtain_custom_fan_speed:
+	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_MODE, &output);
+	if (ret)
+		return ret;
+	else if (output)
+		gigabyte->fan_custom_speed = output;
+
+	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
+	if (ret)
+		return ret;
+	else if (output)
+		gigabyte->charge_mode = output;
+
+	ret = gigabyte_laptop_get_devstate(CHARGING_LIMIT, &output);
+	if (ret)
+		return ret;
+	else if (output)
+		gigabyte->charge_limit = output;
+
+	return 0;
+}
+
 static struct platform_driver platform_driver = {
 	.driver = {
 		.name = GIGABYTE_LAPTOP_FILE,
@@ -517,9 +565,17 @@ static int __init gigabyte_laptop_init(void)
 		goto fail_sysfs;
 	}
 
+	result = gigabyte_laptop_probe(&gigabyte->pdev->dev);
+	if (result) {
+		pr_err("Probe failed\n");
+		goto fail_probe;
+	}
 	pr_info("Hello, World!\n");
 	return 0;
 
+fail_probe:
+	hwmon_device_unregister(gigabyte->hwmon_dev);
+	sysfs_remove_group(&gigabyte->pdev->dev.kobj, &gigabyte_laptop_attr_group);
 fail_sysfs:
 	platform_device_del(gigabyte->pdev);
 	platform_driver_unregister(&platform_driver);
