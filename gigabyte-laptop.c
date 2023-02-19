@@ -576,15 +576,14 @@ static int gigabyte_laptop_probe(struct device *dev)
 	if (ret)
 		return ret;
 	else if (output) {
-		gigabyte->fan_mode = 3;
-		goto obtain_custom_fan_speed;
-	}
-	// There is no way to detect if we are in auto-maximum mode, so skip to fixed mode
-	ret = gigabyte_laptop_get_devstate(FAN_FIXED_MODE, &output);
-	if (ret)
-		return ret;
-	else if (output) {
-		gigabyte->fan_mode = 5;
+		// There is no way to detect if we are in auto-maximum mode, so skip to fixed mode
+		ret = gigabyte_laptop_get_devstate(FAN_FIXED_MODE, &output);
+		if (ret)
+			return ret;
+		else if (output)
+			gigabyte->fan_mode = 5;
+		else
+			gigabyte->fan_mode = 3;
 		goto obtain_custom_fan_speed;
 	}
 	// If all checks return 0, we are most likely in normal fan mode
