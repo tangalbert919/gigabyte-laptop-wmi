@@ -649,8 +649,10 @@ static int probe_custom_fan_speed(int speed)
 		return 90;
 	else if (speed == 0xD9)
 		return 95;
-	else
+	else if (speed == 0xE5)
 		return 100;
+	else // For something like 0x5D, which is unknown
+		return 40;
 }
 
 static int gigabyte_laptop_probe(struct device *dev)
