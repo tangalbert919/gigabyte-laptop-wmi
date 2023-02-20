@@ -743,15 +743,24 @@ static int __init gigabyte_laptop_init(void)
 		return -ENODEV;
 	}
 
+	result = platform_driver_register(&platform_driver);
+	if (result) {
+		pr_warn("Unable to register platform driver\n");
+		return result;
+	}
+
 	gigabyte = kzalloc(sizeof(struct gigabyte_laptop_wmi), GFP_KERNEL);
-	if (!gigabyte)
-		return -ENOMEM;
+	if (!gigabyte) {
+		result = -ENOMEM;
+		goto fail_platform_driver;
+	}
 
 	platform_device = platform_device_alloc(GIGABYTE_LAPTOP_FILE, -1);
 	if (!platform_device) {
 		pr_warn("Unable to allocate platform device\n");
 		kfree(gigabyte);
-		return -ENOMEM;
+		result = -ENOMEM;
+		goto fail_platform_driver;
 	}
 
 	gigabyte->pdev = platform_device;
@@ -761,12 +770,6 @@ static int __init gigabyte_laptop_init(void)
 	if (result) {
 		pr_warn("Unable to add platform device\n");
 		goto fail_platform_device;
-	}
-
-	result = platform_driver_register(&platform_driver);
-	if (result) {
-		pr_warn("Unable to register platform driver\n");
-		return result;
 	}
 
 	result = sysfs_create_group(&gigabyte->pdev->dev.kobj,
@@ -795,9 +798,10 @@ fail_probe:
 	sysfs_remove_group(&gigabyte->pdev->dev.kobj, &gigabyte_laptop_attr_group);
 fail_sysfs:
 	platform_device_del(gigabyte->pdev);
-	platform_driver_unregister(&platform_driver);
 fail_platform_device:
 	platform_device_put(gigabyte->pdev);
+fail_platform_driver:
+	platform_driver_unregister(&platform_driver);
 	return result;
 }
 
