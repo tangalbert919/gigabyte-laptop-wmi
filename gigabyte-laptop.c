@@ -36,6 +36,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define CHARGING_LIMIT   0x65
 #define FAN_CUSTOM_MODE  0x67
 #define FAN_FIXED_MODE   0x6A
+#define FAN_CUSTOM_SPEED 0x6B
 #define FAN_AUTO_MODE    0x70
 #define FAN_GAMING_MODE  0x71
 #define TEMP_CPU         0xE1
@@ -445,7 +446,7 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 
 /*
  * Custom fan speed. Only works if custom mode is enabled.
- * Seems to only scale between 68 and 229.
+ * Must be in multiples of five, between 25 and 100.
  */
 static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
@@ -456,7 +457,59 @@ static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute
 
 static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
-	// TODO: Implement
+	int ret, output;
+	unsigned int speed;
+	u8 real_speed;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtouint(buf, 0, &speed);
+	if (ret)
+		return ret;
+
+	if ((speed < 25 || speed > 100) || speed % 5 != 0) {
+		pr_warn("Invalid custom fan speed: Must be a multiple of 5 and between 25 and 100\n");
+		return -EINVAL;
+	}
+
+	if (speed == 25)
+		real_speed = 0x39;
+	else if (speed == 30)
+		real_speed = 0x44;
+	else if (speed == 35)
+		real_speed = 0x50;
+	else if (speed == 40)
+		real_speed = 0x5B;
+	else if (speed == 45)
+		real_speed = 0x67;
+	else if (speed == 50)
+		real_speed = 0x72;
+	else if (speed == 55)
+		real_speed = 0x7D;
+	else if (speed == 60)
+		real_speed = 0x89;
+	else if (speed == 65)
+		real_speed = 0x94;
+	else if (speed == 70)
+		real_speed = 0xA0;
+	else if (speed == 75)
+		real_speed = 0xAB;
+	else if (speed == 80)
+		real_speed = 0xB7;
+	else if (speed == 85)
+		real_speed = 0xC2;
+	else if (speed == 90)
+		real_speed = 0xCE;
+	else if (speed == 95)
+		real_speed = 0xD9;
+	else if (speed == 100)
+		real_speed = 0xE5;
+
+	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, real_speed, &output);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->fan_custom_speed = speed;
 	return count;
 }
 
@@ -550,7 +603,55 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 	.attrs = gigabyte_laptop_attributes,
 };
 
+/*#define DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME(name) \
+	{ .matches = { \
+		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "GIGABYTE"), \
+		DMI_EXACT_MATCH(DMI_PRODUCT_FAMILY, name), \
+	}}
+
+static const struct dmi_system_id gigabyte_wmi_known_working_platforms[] = {
+	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AERO"),
+	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AORUS"),
+	{ }
+};*/
+
 /* Driver init ********************************************/
+
+static int probe_custom_fan_speed(int speed)
+{
+	if (speed == 0x39)
+		return 25;
+	else if (speed == 0x44)
+		return 30;
+	else if (speed == 0x50)
+		return 35;
+	else if (speed == 0x5B)
+		return 40;
+	else if (speed == 0x67)
+		return 45;
+	else if (speed == 0x72)
+		return 50;
+	else if (speed == 0x7D)
+		return 55;
+	else if (speed == 0x89)
+		return 60;
+	else if (speed == 0x94)
+		return 65;
+	else if (speed == 0xA0)
+		return 70;
+	else if (speed == 0xAB)
+		return 75;
+	else if (speed == 0xB7)
+		return 80;
+	else if (speed == 0xC2)
+		return 85;
+	else if (speed == 0xCE)
+		return 90;
+	else if (speed == 0xD9)
+		return 95;
+	else
+		return 100;
+}
 
 static int gigabyte_laptop_probe(struct device *dev)
 {
@@ -590,12 +691,11 @@ static int gigabyte_laptop_probe(struct device *dev)
 	gigabyte->fan_mode = 0;
 
 obtain_custom_fan_speed:
-	// Auto-maximum mode returns the custom fan speed
-	ret = gigabyte_laptop_get_devstate(FAN_AUTO_MODE, &output);
+	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_SPEED, &output);
 	if (ret)
 		return ret;
 	else if (output)
-		gigabyte->fan_custom_speed = output;
+		gigabyte->fan_custom_speed = probe_custom_fan_speed(output);
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
 	if (ret)
