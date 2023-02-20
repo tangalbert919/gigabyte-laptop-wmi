@@ -8,6 +8,7 @@
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/acpi.h>
+#include <linux/dmi.h>
 #include <linux/hwmon.h>
 #include <linux/hwmon-sysfs.h>
 #include <linux/init.h>
@@ -603,17 +604,17 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 	.attrs = gigabyte_laptop_attributes,
 };
 
-/*#define DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME(name) \
+#define DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME(name) \
 	{ .matches = { \
 		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "GIGABYTE"), \
 		DMI_EXACT_MATCH(DMI_PRODUCT_FAMILY, name), \
 	}}
 
-static const struct dmi_system_id gigabyte_wmi_known_working_platforms[] = {
+static const struct dmi_system_id gigabyte_laptop_known_working_platforms[] = {
 	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AERO"),
 	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AORUS"),
 	{ }
-};*/
+};
 
 /* Driver init ********************************************/
 
@@ -742,6 +743,11 @@ static int __init gigabyte_laptop_init(void)
 	if (!wmi_has_guid(WMI_METHOD_WMBC) ||
 		!wmi_has_guid(WMI_METHOD_WMBD)) {
 		pr_warn("No known WMI GUID found!\n");
+		return -ENODEV;
+	}
+
+	if (!dmi_check_system(gigabyte_laptop_known_working_platforms)) {
+		pr_err("Laptop not supported\n");
 		return -ENODEV;
 	}
 
