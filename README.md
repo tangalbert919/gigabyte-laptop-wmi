@@ -17,7 +17,18 @@ through HWMON.
 
 ## Supported models
 
+Tested:
 - Aero 15 Classic (SA/WA/XA/YA)
+
+Untested:
+- All other Aero models (at least as far back as Aero 14 W)
+- Some AORUS models (at least from AORUS 15 (2019) onwards)
+
+## Unsupported models
+- All Sabre models (retired in 2018)
+- All Gigabyte Gaming models (e.g. G7)
+- U series
+- P series models (e.g. P56XT, P34W)
 
 ## Adding a new model
 
