@@ -1,0 +1,26 @@
+name: Release driver
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download archive
+        run: |
+          curl -s https://github.com/tangalbert919/gigabyte-laptop-wmi/archive/${{ github.ref }}.zip -o archive.tar.gz
+      - name: Get checksum
+        run: sha256sum *.tar.gz | tee sum.txt
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: false
+          prerelease: false
+          files: sum.txt
