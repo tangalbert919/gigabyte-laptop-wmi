@@ -51,7 +51,8 @@ struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
 	struct device *hwmon_dev;
 	int fan_mode;
-	int fan_custom_speed;
+	int fan_custom_display_speed;
+	int fan_custom_internal_speed;
 	int charge_mode;
 	int charge_limit;
 };
@@ -331,7 +332,7 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 			ret = gigabyte_laptop_set_devstate(FAN_FIXED_MODE, 0, &result);
 			if (ret)
 				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_AUTO_MODE, gigabyte->fan_custom_speed, &result);
+			ret = gigabyte_laptop_set_devstate(FAN_AUTO_MODE, gigabyte->fan_custom_internal_speed, &result);
 			if (ret)
 				return ret;
 		}
@@ -414,7 +415,7 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 
 	if (fan_mode > 5) {
 		pr_err("Invalid fan mode\n");
-		return count;
+		return -EINVAL;
 	} else if (fan_mode == 5) {
 		ret = set_fan_mode(gigabyte, FAN_FIXED_MODE);
 		if (ret)
@@ -453,7 +454,7 @@ static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	return sysfs_emit(buf, "%d\n", gigabyte->fan_custom_speed);
+	return sysfs_emit(buf, "%d\n", gigabyte->fan_custom_display_speed);
 }
 
 static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -510,7 +511,8 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 		return ret;
 
 	gigabyte = dev_get_drvdata(dev);
-	gigabyte->fan_custom_speed = speed;
+	gigabyte->fan_custom_display_speed = speed;
+	gigabyte->fan_custom_internal_speed = real_speed;
 	return count;
 }
 
@@ -706,8 +708,10 @@ obtain_custom_fan_speed:
 	ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_SPEED, &output);
 	if (ret)
 		return ret;
-	else if (output)
-		gigabyte->fan_custom_speed = probe_custom_fan_speed(output);
+	else if (output) {
+		gigabyte->fan_custom_display_speed = probe_custom_fan_speed(output);
+		gigabyte->fan_custom_internal_speed = output;
+	}
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
 	if (ret)
