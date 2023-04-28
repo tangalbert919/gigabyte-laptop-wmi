@@ -12,9 +12,13 @@ jobs:
     steps:
       - name: Download archive
         run: |
-          curl -s https://github.com/tangalbert919/gigabyte-laptop-wmi/archive/${{ github.ref }}.zip -o archive.tar.gz
+          curl -s https://github.com/tangalbert919/gigabyte-laptop-wmi/archive/${{ github.ref }}.tar.gz -o archive.tar.gz
+      - name: Extract and create archive
+        run: |
+          tar -xf archive.tar.gz --strip-components=1
+          tar -czf driver.tar.gz Makefile gigabyte-laptop.c dkms.conf
       - name: Get checksum
-        run: sha256sum *.tar.gz | tee sum.txt
+        run: sha256sum driver.tar.gz | tee sum.txt
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -23,4 +27,6 @@ jobs:
         with:
           draft: false
           prerelease: false
-          files: sum.txt
+          files: |
+            sum.txt
+            driver.tar.gz
