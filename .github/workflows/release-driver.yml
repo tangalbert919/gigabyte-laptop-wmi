@@ -10,13 +10,14 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     steps:
-      - name: Download archive
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Generate archive
         run: |
-          curl -s https://github.com/tangalbert919/gigabyte-laptop-wmi/archive/${{ github.ref }}.tar.gz -o archive.tar.gz
-      - name: Extract and create archive
-        run: |
-          tar -xf archive.tar.gz --strip-components=1
+          pushd ${{ github.repository }}
           tar -czf driver.tar.gz Makefile gigabyte-laptop.c dkms.conf
+          mv driver.tar.gz ..
+          popd
       - name: Get checksum
         run: sha256sum driver.tar.gz | tee sum.txt
       - name: Create Release
