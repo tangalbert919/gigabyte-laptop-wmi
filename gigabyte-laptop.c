@@ -182,6 +182,7 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					u32 attr, int channel, long *val)
 {
 	int ret, output;
+	u8 result;
 
 	switch (type) {
 		case hwmon_temp:
@@ -197,6 +198,13 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					if (ret)
 						break;
 					*val = output;
+					break;
+				case 2:
+					// Motherboard temp cannot be read through WMI
+					ret = ec_read(0x62, &result);
+					if (ret)
+						break;
+					*val = result;
 					break;
 				default:
 					*val = 0;
