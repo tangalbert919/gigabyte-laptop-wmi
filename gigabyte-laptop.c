@@ -34,9 +34,11 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define WMI_STRING_WMBD_XD "\\_SB.PC00.AMW0.WMBD"
 
 /* WMI method arguments */
+// Not supported by Aero 14 W
 #define FAN_SILENT_MODE  0x57
 #define CHARGING_MODE    0x64
 #define CHARGING_LIMIT   0x65
+// Supported by Aero 14 W
 #define FAN_CUSTOM_MODE  0x67
 #define FAN_FIXED_MODE   0x6A
 #define FAN_CUSTOM_SPEED 0x6B
@@ -46,8 +48,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define TEMP_GPU         0xE2
 #define FAN_CPU_RPM      0xE4
 #define FAN_GPU_RPM      0xE5
-#define FAN_THREE_RPM    0xE8
-#define FAN_FOUR_RPM     0xE9
+#define FAN_THREE_RPM    0xE8 // 2023 AORUS 17
+#define FAN_FOUR_RPM     0xE9 // 2023 AORUS 17X
 
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
