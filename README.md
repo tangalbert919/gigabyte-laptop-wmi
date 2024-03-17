@@ -30,18 +30,7 @@ Untested:
 - U series
 - P series models (e.g. P56XT, P34W)
 
-## Adding a new model
 
-TODO
+## Installation/Usage
 
-## How to install
-
-```
-make
-sudo insmod gigabyte-laptop.ko
-```
-
-## How to remove
-```
-sudo rmmod gigabyte_laptop
-```
+All information for this have been moved to [INSTALL.md](INSTALL.md) and [USAGE.md](USAGE.md). You can also check the [wiki](https://github.com/tangalbert919/gigabyte-laptop-wmi/wiki) on how to install and use this kernel driver.
