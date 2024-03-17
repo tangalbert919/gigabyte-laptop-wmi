@@ -62,6 +62,7 @@ struct gigabyte_laptop_wmi {
 };
 
 struct gigabyte_args {
+	u32 arg0;
 	u32 arg1;
 	u32 arg2;
 };
@@ -121,6 +122,7 @@ static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 	//struct acpi_object_list params;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 	struct gigabyte_args args = {
+		.arg0 = 0,
 		.arg1 = arg1,
 		.arg2 = arg2,
 	};
