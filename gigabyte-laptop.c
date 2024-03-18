@@ -61,12 +61,6 @@ struct gigabyte_laptop_wmi {
 	int charge_limit;
 };
 
-struct gigabyte_args {
-	u32 arg0;
-	u32 arg1;
-	u32 arg2;
-};
-
 static struct platform_device *platform_device;
 
 /* WMI methods ********************************************/
@@ -74,29 +68,11 @@ static struct platform_device *platform_device;
 /* WMBC method (checks value in EC) */
 static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
 {
-	union acpi_object args[3], *obj;
+	union acpi_object *obj;
 	acpi_status status;
-	//acpi_handle handle;
-	//struct acpi_object_list params;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 	struct acpi_buffer input = { sizeof(arg1), &arg1 };
 
-	/*status = acpi_get_handle(NULL, (acpi_string) WMI_STRING_WMBC, &handle);
-	if (ACPI_FAILURE(status)) {
-		pr_err("Cannot get handle\n");
-		return -1;
-	}
-
-	args[0].type = ACPI_TYPE_INTEGER;
-	args[0].integer.value = 0;
-	args[1].type = ACPI_TYPE_INTEGER;
-	args[1].integer.value = arg1;
-	args[2].type = ACPI_TYPE_INTEGER;
-	args[2].integer.value = 0;
-	params.count = 3;
-	params.pointer = args;*/
-
-	//status = acpi_evaluate_object(handle, NULL, &params, &buffer);
 	status = wmi_evaluate_method(WMI_METHOD_WMBC, 0, arg1, &input, &buffer);
 	if (ACPI_FAILURE(status))
 		return -1;
@@ -115,35 +91,11 @@ static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
 /* WMBD method (sets value in EC) */
 static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
 {
-	//union acpi_object args[3], *obj;
 	union acpi_object *obj;
 	acpi_status status;
-	//acpi_handle handle;
-	//struct acpi_object_list params;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-	struct gigabyte_args args = {
-		.arg0 = 0,
-		.arg1 = arg1,
-		.arg2 = arg2,
-	};
-	struct acpi_buffer input = { sizeof(args), &args};
+	struct acpi_buffer input = { sizeof(arg2), &arg2 };
 
-	/*status = acpi_get_handle(NULL, (acpi_string) WMI_STRING_WMBD, &handle);
-	if (ACPI_FAILURE(status)) {
-		pr_err("Cannot get handle\n");
-		return -1;
-	}
-
-	args[0].type = ACPI_TYPE_INTEGER;
-	args[0].integer.value = 0;
-	args[1].type = ACPI_TYPE_INTEGER;
-	args[1].integer.value = arg1;
-	args[2].type = ACPI_TYPE_INTEGER;
-	args[2].integer.value = arg2;
-	params.count = 3;
-	params.pointer = args;
-
-	status = acpi_evaluate_object(handle, NULL, &params, &buffer);*/
 	status = wmi_evaluate_method(WMI_METHOD_WMBD, 0, arg1, &input, &buffer);
 	if (ACPI_FAILURE(status))
 		return -1;
