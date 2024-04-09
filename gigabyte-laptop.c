@@ -28,10 +28,6 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 /* _SB_.PCI0.AMW0._WDG */
 #define WMI_METHOD_WMBC "ABBC0F6F-8EA1-11D1-00A0-C90629100000" // Seems to only return values
 #define WMI_METHOD_WMBD "ABBC0F75-8EA1-11D1-00A0-C90629100000" // Will probably do most of the work.
-#define WMI_STRING_WMBC "\\_SB.PCI0.AMW0.WMBC"
-#define WMI_STRING_WMBD "\\_SB.PCI0.AMW0.WMBD"
-#define WMI_STRING_WMBC_XD "\\_SB.PC00.AMW0.WMBC"
-#define WMI_STRING_WMBD_XD "\\_SB.PC00.AMW0.WMBD"
 
 /* WMI method arguments */
 // Not supported by Aero 14 W
