@@ -215,13 +215,6 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 	return 0;
 }
 
-static int gigabyte_laptop_hwmon_write(struct device *dev, enum hwmon_sensor_types type,
-					u32 attr, int channel, long val)
-{
-	// Probably won't be used.
-	return 0;
-}
-
 static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 	HWMON_CHANNEL_INFO(temp,
 				HWMON_T_INPUT,
@@ -237,7 +230,6 @@ static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 
 static const struct hwmon_ops gigabyte_laptop_hwmon_ops = {
 	.read = gigabyte_laptop_hwmon_read,
-	//.write = gigabyte_laptop_hwmon_write,
 	.is_visible = gigabyte_laptop_hwmon_is_visible,
 };
 
