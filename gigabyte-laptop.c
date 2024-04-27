@@ -59,6 +59,15 @@ struct gigabyte_laptop_wmi {
 
 static struct platform_device *platform_device;
 
+static u8 fan_modes[] = {
+	0,
+	FAN_SILENT_MODE,
+	FAN_GAMING_MODE,
+	FAN_CUSTOM_MODE,
+	FAN_AUTO_MODE,
+	FAN_FIXED_MODE
+};
+
 /* WMI methods ********************************************/
 
 /* WMBC method (checks value in EC) */
@@ -254,45 +263,49 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 
 	if (fan_mode == FAN_FIXED_MODE || fan_mode == FAN_AUTO_MODE) {
 		if (gigabyte->fan_mode < 3) { // If custom mode is off, enable it
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
+			if (gigabyte->fan_mode > 0) {
+				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
 			if (ret)
 				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
-			if (ret)
-				return ret;
+			}
+
 			ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_MODE, 1, &result);
 			if (ret)
 				return ret;
 		}
 
-		if (fan_mode == FAN_FIXED_MODE) {
+		if (gigabyte->fan_mode > 3) { // Fixed or auto mode active
+			if (gigabyte->fan_mode == 4) {
 			// Auto-maximum mode can only be turned off through gaming or silent mode
 			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
 			if (ret)
 				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_FIXED_MODE, 1, &result);
+		} else {
+				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
+			if (ret)
+				return ret;
+		}
+		}
+
+		if (fan_mode == FAN_AUTO_MODE) {
+			ret = gigabyte_laptop_set_devstate(fan_mode, gigabyte->fan_custom_internal_speed, &result);
 			if (ret)
 				return ret;
 		} else {
-			ret = gigabyte_laptop_set_devstate(FAN_FIXED_MODE, 0, &result);
-			if (ret)
-				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_AUTO_MODE, gigabyte->fan_custom_internal_speed, &result);
-			if (ret)
-				return ret;
+		ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
+		if (ret)
+			return ret;
 		}
 	} else if (fan_mode == FAN_CUSTOM_MODE) {
 		if (gigabyte->fan_mode > 3) {
 			pr_warn("Custom mode is already enabled\n");
 			return 0;
 		} else if (gigabyte->fan_mode > 0) {
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
-			if (ret)
-				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
+			ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
 			if (ret)
 				return ret;
 		}
+
 		ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_MODE, 1, &result);
 		if (ret)
 			return ret;
@@ -301,30 +314,14 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 			ret = disable_custom_fan_mode(gigabyte->fan_mode);
 			if (ret)
 				return ret;
+		} else if (gigabyte->fan_mode > 0) {
+				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
+			if (ret)
+				return ret;
+			}
 
-			if (fan_mode == 0)
-				return 0;
-		}
-
-		if (fan_mode == FAN_SILENT_MODE) {
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
-			if (ret)
-				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 1, &result);
-			if (ret)
-				return ret;
-		} else if (fan_mode == FAN_GAMING_MODE) {
-			ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
-			if (ret)
-				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 1, &result);
-			if (ret)
-				return ret;
-		} else { // Normal fan mode
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
-			if (ret)
-				return ret;
-			ret = gigabyte_laptop_set_devstate(FAN_SILENT_MODE, 0, &result);
+		if (fan_mode != 0) {
+				ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
 			if (ret)
 				return ret;
 		}
@@ -361,28 +358,8 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 	if (fan_mode > 5) {
 		pr_err("Invalid fan mode\n");
 		return -EINVAL;
-	} else if (fan_mode == 5) {
-		ret = set_fan_mode(gigabyte, FAN_FIXED_MODE);
-		if (ret)
-			return ret;
-	} else if (fan_mode == 4) {
-		ret = set_fan_mode(gigabyte, FAN_AUTO_MODE);
-		if (ret)
-			return ret;
-	} else if (fan_mode == 3) {
-		ret = set_fan_mode(gigabyte, FAN_CUSTOM_MODE);
-		if (ret)
-			return ret;
-	} else if (fan_mode == 2) {
-		ret = set_fan_mode(gigabyte, FAN_GAMING_MODE);
-		if (ret)
-			return ret;
-	} else if (fan_mode == 1) {
-		ret = set_fan_mode(gigabyte, FAN_SILENT_MODE);
-		if (ret)
-			return ret;
-	} else if (fan_mode == 0) {
-		ret = set_fan_mode(gigabyte, 0);
+	} else {
+		ret = set_fan_mode(gigabyte, fan_modes[fan_mode]);
 		if (ret)
 			return ret;
 	}
