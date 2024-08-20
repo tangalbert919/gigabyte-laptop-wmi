@@ -586,6 +586,17 @@ static int gigabyte_laptop_probe(struct device *dev)
 	u8 result;
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
+	// Older devices are using a different method ID for silent fan mode.
+	// In that case, newer devices won't return anything when using that ID.
+	ret = gigabyte_laptop_get_devstate(FAN_SILENT_OLD, &output);
+	if (output < 0) { // -1 on newer devices
+		pr_info("Newer model detected, using new silent fan mode ID");
+		gigabyte->fan_silent_method = FAN_SILENT_MODE;
+	}
+	else { // 0 on older devices
+		pr_info("Older model detected, using old ID");
+		gigabyte->fan_silent_method = FAN_SILENT_OLD;
+	}
 	// Get current fan mode.
 	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
 	if (ret)
