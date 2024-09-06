@@ -62,6 +62,8 @@ struct gigabyte_laptop_wmi {
 	int fan_custom_internal_speed;
 	int charge_mode;
 	int charge_limit;
+	int gpu_boost;
+	u8 fan_silent_method;
 };
 
 static struct platform_device *platform_device;
