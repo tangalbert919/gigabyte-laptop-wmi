@@ -26,12 +26,16 @@ MODULE_LICENSE("GPL");
 MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 
 /* _SB_.PCI0.AMW0._WDG */
+#define WMI_EVENT "ABBC0F72-8EA1-11D1-00A0-C90629100000" // Hopefully, it's used for hotkeys
+#define WMI_METHOD_WMBB "ABBC0F6D-8EA1-11D1-00A0-C90629100000" // Gaming/Sabre/U
 #define WMI_METHOD_WMBC "ABBC0F6F-8EA1-11D1-00A0-C90629100000" // Seems to only return values
 #define WMI_METHOD_WMBD "ABBC0F75-8EA1-11D1-00A0-C90629100000" // Will probably do most of the work.
 
 /* WMI method arguments */
 // Not supported by Aero 14 W
+#define GPU_QBOOST       0x51
 #define FAN_SILENT_MODE  0x57
+#define FAN_CURVE        0x63
 #define CHARGING_MODE    0x64
 #define CHARGING_LIMIT   0x65
 // Supported by Aero 14 W
@@ -40,12 +44,15 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_CUSTOM_SPEED 0x6B
 #define FAN_AUTO_MODE    0x70
 #define FAN_GAMING_MODE  0x71
+#define WIFI_TOGGLE      0xC2
+#define TOUCHPAD_ENABLED 0xCA
 #define TEMP_CPU         0xE1
 #define TEMP_GPU         0xE2
 #define FAN_CPU_RPM      0xE4
 #define FAN_GPU_RPM      0xE5
 #define FAN_THREE_RPM    0xE8 // 2023 AORUS 17
 #define FAN_FOUR_RPM     0xE9 // 2023 AORUS 17X
+#define FAN_SILENT_OLD   0xFA // Older Aero and P-series models
 
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
@@ -191,9 +198,9 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 			break;
 		case hwmon_fan:
 			ret = gigabyte_laptop_get_devstate(fan_channels[channel], &output);
-					if (ret)
-						break;
-					*val = convert_fan_rpm(output);
+			if (ret)
+				break;
+			*val = convert_fan_rpm(output);
 			break;
 		default:
 			break;
@@ -265,8 +272,8 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 		if (gigabyte->fan_mode < 3) { // If custom mode is off, enable it
 			if (gigabyte->fan_mode > 0) {
 				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
-			if (ret)
-				return ret;
+				if (ret)
+					return ret;
 			}
 
 			ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_MODE, 1, &result);
@@ -276,15 +283,15 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 
 		if (gigabyte->fan_mode > 3) { // Fixed or auto mode active
 			if (gigabyte->fan_mode == 4) {
-			// Auto-maximum mode can only be turned off through gaming or silent mode
-			ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
-			if (ret)
-				return ret;
-		} else {
+				// Auto-maximum mode can only be turned off through gaming or silent mode
+				ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
+				if (ret)
+					return ret;
+			} else {
 				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
-			if (ret)
-				return ret;
-		}
+				if (ret)
+					return ret;
+			}
 		}
 
 		if (fan_mode == FAN_AUTO_MODE) {
@@ -292,9 +299,9 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 			if (ret)
 				return ret;
 		} else {
-		ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
-		if (ret)
-			return ret;
+			ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
+			if (ret)
+				return ret;
 		}
 	} else if (fan_mode == FAN_CUSTOM_MODE) {
 		if (gigabyte->fan_mode > 3) {
@@ -316,12 +323,12 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 				return ret;
 		} else if (gigabyte->fan_mode > 0) {
 				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
-			if (ret)
-				return ret;
-			}
+				if (ret)
+					return ret;
+		}
 
 		if (fan_mode != 0) {
-				ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
+			ret = gigabyte_laptop_set_devstate(fan_mode, 1, &result);
 			if (ret)
 				return ret;
 		}
