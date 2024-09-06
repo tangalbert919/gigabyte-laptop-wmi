@@ -3,7 +3,7 @@
 ### How to install
 ```
 make
-sudo insmod gigabyte-laptop.ko
+sudo insmod aorus-laptop.ko
 ```
 
 ### How to remove

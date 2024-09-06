@@ -15,5 +15,5 @@ sha256sums=("$(curl -sL ${url}/releases/download/${pkgver}/sum.txt | cut -d ' ' 
 package() {
   # Set name and version
   sed -e "s/@PKGVER@/${pkgver}/" -i dkms.conf
-  install -Dt "${pkgdir}/usr/src/${pkgbase}-${pkgver}" -m644 Makefile gigabyte-laptop.c dkms.conf
+  install -Dt "${pkgdir}/usr/src/${pkgbase}-${pkgver}" -m644 Makefile aorus-laptop.c dkms.conf
 }

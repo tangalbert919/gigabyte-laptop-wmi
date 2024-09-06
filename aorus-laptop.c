@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 /*
- *  gigabyte-laptop.c - Gigabyte laptop WMI driver
+ *  aorus-laptop.c - AORUS laptop WMI driver
  *
  *  Copyright (C) 2023 Albert Tang
  */
@@ -18,7 +18,7 @@
 #include <linux/wmi.h>
 
 #define GIGABYTE_LAPTOP_VERSION "0.01"
-#define GIGABYTE_LAPTOP_FILE  KBUILD_MODNAME
+#define GIGABYTE_LAPTOP_FILE  "gigabyte_laptop"
 
 MODULE_AUTHOR("Albert Tang");
 MODULE_DESCRIPTION("Gigabyte laptop WMI driver");
