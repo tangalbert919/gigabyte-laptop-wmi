@@ -537,15 +537,26 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 	.attrs = gigabyte_laptop_attributes,
 };
 
-#define DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME(name) \
+#define DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY(name) \
 	{ .matches = { \
 		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "GIGABYTE"), \
 		DMI_EXACT_MATCH(DMI_PRODUCT_FAMILY, name), \
 	}}
 
+#define DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE(name) \
+	{ .matches = { \
+		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "GIGABYTE"), \
+		DMI_EXACT_MATCH(DMI_PRODUCT_NAME, name), \
+	}}
+
 static const struct dmi_system_id gigabyte_laptop_known_working_platforms[] = {
-	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AERO"),
-	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_NAME("AORUS"),
+	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY("AERO"),
+	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY("AORUS"),
+	// For older Aero models
+	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY("Intel"),
+	DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE("Aero 14"),
+	DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE("P64V6"),
+	DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE("P64V7"),
 	{ }
 };
 
