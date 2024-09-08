@@ -17,6 +17,10 @@ This kernel driver enables interaction with the EC via WMI methods:
 The controls are available through sysfs, while the sensor data are available
 through HWMON.
 
+The objective is to eliminate the need to use "hacks" to interact with the EC,
+such as calling ACPI directly from userspace (as root) or by loading `ec-sys`
+to set specific bits in EC memory ourselves (see [this repository](https://github.com/jertel/p37-ec) and [this fork](https://github.com/christiansteinert/p37-ec-aero-14)).
+
 ## Model support
 
 The following models are currently supported:
@@ -26,7 +30,7 @@ The following models are currently supported:
 - All AORUS models
 
 The following models are compatible, but **not** yet supported:
-- All Aero 14 models made before 2019 (see issue [TODO: Create issue regarding old Aero 14 models])
+- All Aero 14 models made before 2019 (see [this issue](https://github.com/tangalbert919/gigabyte-laptop-wmi/issues/7))
 - P series models (e.g. P56XT, P34W, P55W)
 
 The following models are not supported:
