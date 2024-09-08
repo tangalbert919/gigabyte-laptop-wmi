@@ -8,6 +8,6 @@ sudo insmod aorus-laptop.ko
 
 ### How to remove
 ```
-sudo rmmod gigabyte_laptop
+sudo rmmod aorus_laptop
 ```
 
