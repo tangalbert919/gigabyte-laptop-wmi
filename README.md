@@ -1,7 +1,11 @@
 # gigabyte-laptop-wmi
 
-This is an experimental kernel driver for Gigabyte laptops to interact with
-the embedded controller.
+This is an experimental kernel driver for Gigabyte Aero/AORUS laptops to
+interact with the embedded controller.
+
+Gigabyte Gaming series laptops are not supported. Since they are just rebadged
+Clevo laptops (specifically, the NP5x and NP7x series), you can just use
+[these drivers](https://github.com/wessel-novacustom/clevo-keyboard/tree/master).
 
 ## Overview
 
@@ -10,12 +14,8 @@ the embedded controller (EC), which can only be accessed through Gigabyte's
 Control Center on Windows. Because it is implemented as a WMI device,
 interacting with it on Linux is difficult.
 
-This kernel driver enables interaction with the EC via WMI methods:
-* On Aero/AORUS models, there are two: `WMBC` and `WMBD`.
-* On Sabre/Gigabyte Gaming models, there is one: `WMBB`. (Currently not supported)
-
-The controls are available through sysfs, while the sensor data are available
-through HWMON.
+This kernel driver enables interaction with the EC via WMI methods `WMBC` and `WMBD`. The controls are made available through sysfs, while the sensor data
+are available through HWMON.
 
 The objective is to eliminate the need to use "hacks" to interact with the EC,
 such as calling ACPI directly from userspace (as root) or by loading `ec-sys`
@@ -35,7 +35,8 @@ The following models are compatible, but **not** yet supported:
 
 The following models are not supported:
 - All Sabre models (retired in 2018)
-- All Gigabyte Gaming models (e.g. G7, replaced Sabre series)
+- All Gigabyte Gaming models (e.g. G7, replaced Sabre series, are just rebadged
+Clevo laptops)
 - All U series models
 
 ## Installation/Usage
