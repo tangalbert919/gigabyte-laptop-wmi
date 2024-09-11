@@ -178,20 +178,20 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					ret = gigabyte_laptop_get_devstate(TEMP_CPU, &output);
 					if (ret)
 						break;
-					*val = output;
+					*val = output * 1000;
 					break;
 				case 1:
 					ret = gigabyte_laptop_get_devstate(TEMP_GPU, &output);
 					if (ret)
 						break;
-					*val = output;
+					*val = output * 1000;
 					break;
 				case 2:
 					// Motherboard temp cannot be read through WMI
 					ret = ec_read(0x62, &result);
 					if (ret)
 						break;
-					*val = result;
+					*val = result * 1000;
 					break;
 				default:
 					*val = 0;
