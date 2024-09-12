@@ -617,8 +617,12 @@ static int gigabyte_laptop_probe(struct device *dev)
 		pr_info("Older model detected, using old ID");
 		gigabyte->fan_silent_method = FAN_SILENT_OLD;
 	}
+
+	// Set silent fan mode ID.
+	fan_modes[1] = gigabyte->fan_silent_method;
+
 	// Get current fan mode.
-	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
+	ret = gigabyte_laptop_get_devstate(gigabyte->fan_silent_method, &output);
 	if (ret)
 		return ret;
 	else if (output) {
