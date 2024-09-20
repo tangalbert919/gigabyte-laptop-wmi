@@ -44,6 +44,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_CUSTOM_SPEED 0x6B
 #define FAN_AUTO_MODE    0x70
 #define FAN_GAMING_MODE  0x71
+#define USB_SLEEP        0x7A
+#define USB_HIBERNATE    0x7B
 #define WIFI_TOGGLE      0xC2
 #define TOUCHPAD_ENABLED 0xCA
 #define TEMP_CPU         0xE1
@@ -519,6 +521,19 @@ static ssize_t charge_limit_store(struct device *dev, struct device_attribute *a
 	return count;
 }
 
+#define TOGGLE_DEVICE(_device, _id) \
+static ssize_t _device##_toggle_show(struct device *dev, struct device_attribute *attr, char *buf) \
+{ \
+	int ret, output; \
+	ret = gigabyte_laptop_get_devstate(_id, &output); \
+	if (ret) \
+		return ret; \
+	return sysfs_emit(buf, "%d\n", output); \
+} \
+static DEVICE_ATTR_RO(_device##_toggle);
+TOGGLE_DEVICE(usb_charge_s3, USB_SLEEP);
+TOGGLE_DEVICE(usb_charge_s4, USB_HIBERNATE);
+
 static DEVICE_ATTR_RW(fan_mode);
 static DEVICE_ATTR_RW(fan_custom_speed);
 static DEVICE_ATTR_RW(charge_mode);
@@ -529,6 +544,8 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_custom_speed.attr,
 	&dev_attr_charge_mode.attr,
 	&dev_attr_charge_limit.attr,
+	&dev_attr_usb_charge_s3_toggle.attr,
+	&dev_attr_usb_charge_s4_toggle.attr,
 	NULL
 };
 
