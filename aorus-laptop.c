@@ -35,11 +35,11 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 // Not supported by Aero 14 W
 #define GPU_QBOOST       0x51
 #define FAN_SILENT_MODE  0x57
-#define FAN_CURVE        0x63
 #define CHARGING_MODE    0x64
 #define CHARGING_LIMIT   0x65
 // Supported by Aero 14 W
 #define FAN_CUSTOM_MODE  0x67
+#define FAN_INDEX_VALUE  0x68
 #define FAN_FIXED_MODE   0x6A
 #define FAN_CUSTOM_SPEED 0x6B
 #define FAN_AUTO_MODE    0x70
@@ -55,6 +55,9 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_THREE_RPM    0xE8 // 2023 AORUS 17
 #define FAN_FOUR_RPM     0xE9 // 2023 AORUS 17X
 #define FAN_SILENT_OLD   0xFA // Older Aero and P-series models
+
+// Fan curves
+#define FAN_CURVE_POINTS 15
 
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
@@ -79,17 +82,22 @@ static u8 fan_modes[] = {
 	FAN_FIXED_MODE
 };
 
+struct fan_curve {
+	u8 temperature[FAN_CURVE_POINTS];
+	u8 speed[FAN_CURVE_POINTS];
+};
+
 /* WMI methods ********************************************/
 
 /* WMBC method (checks value in EC) */
-static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
+static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, int *result)
 {
 	union acpi_object *obj;
 	acpi_status status;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
-	struct acpi_buffer input = { sizeof(arg1), &arg1 };
+	struct acpi_buffer input = { sizeof(arg2), &arg2 };
 
-	status = wmi_evaluate_method(WMI_METHOD_WMBC, 0, arg1, &input, &buffer);
+	status = wmi_evaluate_method(WMI_METHOD_WMBC, 0, method_id, &input, &buffer);
 	if (ACPI_FAILURE(status))
 		return -1;
 
@@ -104,15 +112,19 @@ static int gigabyte_laptop_get_devstate(u32 arg1, int *result)
 	return 0;
 }
 
+static int gigabyte_laptop_get_devstate(u32 method_id, int *result) {
+	return gigabyte_laptop_get_devstate2(method_id, 0, result);
+}
+
 /* WMBD method (sets value in EC) */
-static int gigabyte_laptop_set_devstate(u32 arg1, u32 arg2, int *result)
+static int gigabyte_laptop_set_devstate(u32 method_id, u32 arg2, int *result)
 {
 	union acpi_object *obj;
 	acpi_status status;
 	struct acpi_buffer buffer = { ACPI_ALLOCATE_BUFFER, NULL };
 	struct acpi_buffer input = { sizeof(arg2), &arg2 };
 
-	status = wmi_evaluate_method(WMI_METHOD_WMBD, 0, arg1, &input, &buffer);
+	status = wmi_evaluate_method(WMI_METHOD_WMBD, 0, method_id, &input, &buffer);
 	if (ACPI_FAILURE(status))
 		return -1;
 
@@ -521,6 +533,20 @@ static ssize_t charge_limit_store(struct device *dev, struct device_attribute *a
 	return count;
 }
 
+/*
+ * TODO: Implement fan curve (0x68)
+ */
+static ssize_t fan_curve_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	//struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+	int ret, output;
+
+	// This requires sending an index value to get any data.
+	ret = gigabyte_laptop_get_devstate(FAN_INDEX_VALUE, &output);
+
+	return sysfs_emit(buf, "%d\n", output);
+}
+
 #define TOGGLE_DEVICE(_device, _id) \
 static ssize_t _device##_toggle_show(struct device *dev, struct device_attribute *attr, char *buf) \
 { \
@@ -538,6 +564,7 @@ static DEVICE_ATTR_RW(fan_mode);
 static DEVICE_ATTR_RW(fan_custom_speed);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
+static DEVICE_ATTR_RO(fan_curve);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_mode.attr,
@@ -546,6 +573,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_charge_limit.attr,
 	&dev_attr_usb_charge_s3_toggle.attr,
 	&dev_attr_usb_charge_s4_toggle.attr,
+	&dev_attr_fan_curve.attr,
 	NULL
 };
 
