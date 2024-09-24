@@ -34,9 +34,8 @@ The following models are compatible, but **not** yet supported:
 - P series models (e.g. P56XT, P34W, P55W)
 
 The following models are not supported:
-- All Sabre models (retired in 2018)
-- All Gigabyte Gaming models (e.g. G7, replaced Sabre series, are just rebadged
-Clevo laptops)
+- All Sabre models (retired in 2018) and Gigabyte Gaming models (both are rebadged
+Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead)
 - All U series models
 
 ## Installation/Usage
