@@ -58,6 +58,11 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 // Fan curves
 #define FAN_CURVE_POINTS 15
 
+struct fan_curve_data {
+	u8 temperature[FAN_CURVE_POINTS];
+	u8 speed[FAN_CURVE_POINTS];
+};
+
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
 	struct device *hwmon_dev;
@@ -68,6 +73,8 @@ struct gigabyte_laptop_wmi {
 	int charge_limit;
 	int gpu_boost;
 	u8 fan_silent_method;
+	struct fan_curve_data fan_curve;
+	int fan_curve_index;
 };
 
 static struct platform_device *platform_device;
@@ -79,11 +86,6 @@ static u8 fan_modes[] = {
 	FAN_CUSTOM_MODE,
 	FAN_AUTO_MODE,
 	FAN_FIXED_MODE
-};
-
-struct fan_curve {
-	u8 temperature[FAN_CURVE_POINTS];
-	u8 speed[FAN_CURVE_POINTS];
 };
 
 /* WMI methods ********************************************/
@@ -725,6 +727,17 @@ obtain_custom_fan_speed:
 		return ret;
 	else if (output)
 		gigabyte->charge_limit = output;
+
+	// Get the fan curve. Used by custom mode.
+	for (u8 i = 0; i < FAN_CURVE_POINTS; i++) {
+		ret = gigabyte_laptop_get_devstate2(FAN_INDEX_VALUE, i, &output);
+		if (ret)
+			return ret;
+		else if (output) {
+			gigabyte->fan_curve.temperature[i] = output;
+			gigabyte->fan_curve.speed[i] = output >> 8;
+		}
+	}
 
 	return 0;
 }
