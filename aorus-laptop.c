@@ -41,6 +41,8 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_INDEX_VALUE  0x68
 #define FAN_FIXED_MODE   0x6A
 #define FAN_CUSTOM_SPEED 0x6B
+#define BATT_CYCLE2      0x6D
+#define BATT_CYCLE       0x6E
 #define FAN_AUTO_MODE    0x70
 #define FAN_GAMING_MODE  0x71
 #define USB_SLEEP        0x7A
@@ -548,6 +550,21 @@ static ssize_t fan_curve_show(struct device *dev, struct device_attribute *attr,
 	return sysfs_emit(buf, "%d\n", output);
 }
 
+static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret;
+	short cyc1, cyc2;
+
+	ret = gigabyte_laptop_get_devstate(BATT_CYCLE, &cyc1);
+	if (ret)
+		return ret;
+	ret = gigabyte_laptop_get_devstate(BATT_CYCLE2, &cyc2);
+	if (ret)
+		return ret;
+
+	return sysfs_emit(buf, "%d\n", max(cyc1, cyc2));
+}
+
 #define TOGGLE_DEVICE(_device, _id) \
 static ssize_t _device##_toggle_show(struct device *dev, struct device_attribute *attr, char *buf) \
 { \
@@ -566,6 +583,7 @@ static DEVICE_ATTR_RW(fan_custom_speed);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
 static DEVICE_ATTR_RO(fan_curve);
+static DEVICE_ATTR_RO(battery_cycle);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_mode.attr,
@@ -575,6 +593,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_usb_charge_s3_toggle.attr,
 	&dev_attr_usb_charge_s4_toggle.attr,
 	&dev_attr_fan_curve.attr,
+	&dev_attr_battery_cycle.attr,
 	NULL
 };
 
