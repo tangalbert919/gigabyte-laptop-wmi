@@ -539,15 +539,58 @@ static ssize_t charge_limit_store(struct device *dev, struct device_attribute *a
 /*
  * TODO: Implement fan curve (0x68)
  */
-static ssize_t fan_curve_show(struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t fan_curve_index_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	//struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	return sysfs_emit(buf, "%d\n", gigabyte->fan_curve_index);
+}
+
+static ssize_t fan_curve_index_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	unsigned int index;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtouint(buf, 0, &index);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->fan_curve_index = index;
+	return count;
+}
+
+static ssize_t fan_curve_data_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	return sysfs_emit("%d %d\n", gigabyte->fan_curve.temperature[gigabyte->fan_curve_index], gigabyte->fan_curve.speed[gigabyte->fan_curve_index]);
+}
+
+static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
 	int ret, output;
+	u16 data;
+	u32 payload;
+	struct gigabyte_laptop_wmi *gigabyte;
 
-	// This requires sending an index value to get any data.
-	ret = gigabyte_laptop_get_devstate(FAN_INDEX_VALUE, &output);
+	ret = kstrtouint(buf, 0, &data);
+	if (ret)
+		return ret;
 
-	return sysfs_emit(buf, "%d\n", output);
+	gigabyte = dev_get_drvdata(dev);
+	// likely payload: speed, temp, index
+	//payload = gigabyte->fan_curve.speed[gigabyte->fan_curve_index] << 16 | gigabyte->fan_curve.temperature[gigabyte->fan_curve_index] << 8 | (u8) gigabyte->fan_curve_index;
+	payload = data << 8 | gigabyte->fan_curve_index;
+
+	ret = gigabyte_laptop_set_devstate(FAN_INDEX_VALUE, payload, &output);
+	if (ret)
+		return ret;
+
+	gigabyte->fan_curve.temperature[gigabyte->fan_curve_index] = payload;
+	gigabyte->fan_curve.speed[gigabyte->fan_curve_index] = payload >> 8;
+	return count;
 }
 
 static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -582,7 +625,8 @@ static DEVICE_ATTR_RW(fan_mode);
 static DEVICE_ATTR_RW(fan_custom_speed);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
-static DEVICE_ATTR_RO(fan_curve);
+static DEVICE_ATTR_RW(fan_curve_index);
+static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
