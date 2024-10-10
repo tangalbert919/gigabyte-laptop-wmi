@@ -564,8 +564,10 @@ static ssize_t fan_curve_index_store(struct device *dev, struct device_attribute
 static ssize_t fan_curve_data_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+	int index = gigabyte->fan_curve_index;
 
-	return sysfs_emit("%d %d\n", gigabyte->fan_curve.temperature[gigabyte->fan_curve_index], gigabyte->fan_curve.speed[gigabyte->fan_curve_index]);
+	return sysfs_emit(buf, "%d %d\n", gigabyte->fan_curve.temperature[index],
+		gigabyte->fan_curve.speed[index]);
 }
 
 static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
@@ -575,7 +577,7 @@ static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute 
 	u32 payload;
 	struct gigabyte_laptop_wmi *gigabyte;
 
-	ret = kstrtouint(buf, 0, &data);
+	ret = kstrtou16(buf, 0, &data);
 	if (ret)
 		return ret;
 
@@ -595,8 +597,7 @@ static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute 
 
 static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	int ret;
-	short cyc1, cyc2;
+	int ret, cyc1, cyc2;
 
 	ret = gigabyte_laptop_get_devstate(BATT_CYCLE, &cyc1);
 	if (ret)
