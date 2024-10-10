@@ -636,7 +636,8 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_charge_limit.attr,
 	&dev_attr_usb_charge_s3_toggle.attr,
 	&dev_attr_usb_charge_s4_toggle.attr,
-	&dev_attr_fan_curve.attr,
+	&dev_attr_fan_curve_index.attr,
+	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
 	NULL
 };
