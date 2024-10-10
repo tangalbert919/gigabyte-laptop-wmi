@@ -18,7 +18,7 @@
 #include <linux/wmi.h>
 
 #define GIGABYTE_LAPTOP_VERSION "0.01"
-#define GIGABYTE_LAPTOP_FILE  "gigabyte_laptop"
+#define GIGABYTE_LAPTOP_FILE  KBUILD_MODNAME
 
 MODULE_AUTHOR("Albert Tang");
 MODULE_DESCRIPTION("Gigabyte laptop WMI driver");
