@@ -537,6 +537,40 @@ static ssize_t charge_limit_store(struct device *dev, struct device_attribute *a
 }
 
 /*
+ * TODO: Implement GPU boost. (0x51)
+ */
+static ssize_t gpu_boost_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	return sysfs_emit(buf, "%d\n", gigabyte->gpu_boost);
+}
+
+static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret, output;
+	unsigned int mode;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtouint(buf, 0, &mode);
+	if (ret)
+		return ret;
+
+	if (mode > 1) {
+		pr_err("Invalid boost mode");
+		return -EINVAL;
+	}
+
+	ret = gigabyte_laptop_set_devstate(GPU_QBOOST, mode, &output);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->gpu_boost = mode;
+	return count;
+}
+
+/*
  * TODO: Implement fan curve (0x68)
  */
 static ssize_t fan_curve_index_show(struct device *dev, struct device_attribute *attr, char *buf)
@@ -626,6 +660,7 @@ static DEVICE_ATTR_RW(fan_mode);
 static DEVICE_ATTR_RW(fan_custom_speed);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
+static DEVICE_ATTR_RW(gpu_boost);
 static DEVICE_ATTR_RW(fan_curve_index);
 static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
@@ -637,6 +672,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_charge_limit.attr,
 	&dev_attr_usb_charge_s3_toggle.attr,
 	&dev_attr_usb_charge_s4_toggle.attr,
+	&dev_attr_gpu_boost.attr,
 	&dev_attr_fan_curve_index.attr,
 	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
