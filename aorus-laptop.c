@@ -821,7 +821,7 @@ obtain_custom_fan_speed:
 	if (ret)
 		return ret;
 	else if (output)
-		gigabyte->charge_mode = output;
+		gigabyte->charge_mode = output >> 2;
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_LIMIT, &output);
 	if (ret)
