@@ -590,7 +590,7 @@ static ssize_t fan_curve_index_store(struct device *dev, struct device_attribute
 	if (ret)
 		return ret;
 
-	if (index > FAN_CURVE_POINTS) {
+	if (index >= FAN_CURVE_POINTS) {
 		pr_err("Invalid fan curve index\n");
 		return -EINVAL;
 	}
