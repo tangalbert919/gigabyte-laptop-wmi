@@ -629,8 +629,8 @@ static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute 
 	if (ret)
 		return ret;
 
-	gigabyte->fan_curve.temperature[gigabyte->fan_curve_index] = payload;
-	gigabyte->fan_curve.speed[gigabyte->fan_curve_index] = payload >> 8;
+	gigabyte->fan_curve.temperature[gigabyte->fan_curve_index] = data;
+	gigabyte->fan_curve.speed[gigabyte->fan_curve_index] = data >> 8;
 	return count;
 }
 
