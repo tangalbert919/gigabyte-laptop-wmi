@@ -5,7 +5,7 @@
 ## Where are the nodes?
 All available nodes are found at the following path:
 ```
-/sys/devices/platform/gigabyte_laptop
+/sys/devices/platform/aorus_laptop
 ```
 You can write to these nodes using `echo` and `tee`. Keep in mind that you must be logged in as `root` or using `sudo` for this.
 
@@ -27,11 +27,11 @@ Aero/AORUS laptops currently support six fan modes. They are implemented in the 
 
 The last two modes will enable custom mode automatically, as they are considered "custom modes". Custom mode will be automatically disabled if the first three modes are enabled.
 
-**Node:** `/sys/devices/platform/gigabyte_laptop/fan_mode`
+**Node:** `/sys/devices/platform/aorus_laptop/fan_mode`
 
 **Example:** To switch to gaming fan mode:
 ```
-echo '2' | sudo tee /sys/devices/platform/gigabyte_laptop/fan_mode
+echo '2' | sudo tee /sys/devices/platform/aorus_laptop/fan_mode
 ```
 
 ## Custom fan speed
@@ -41,11 +41,11 @@ The kernel driver only supports numbers with the following requirements:
 - It is between 25 and 100.
 - It is divisible by 5.
 
-**Node:** `/sys/devices/platform/gigabyte_laptop/fan_custom_speed`
+**Node:** `/sys/devices/platform/aorus_laptop/fan_custom_speed`
 
 **Example:** To set the custom fan speed to 50 percent:
 ```
-echo '50' | sudo tee /sys/devices/platform/gigabyte_laptop/fan_custom_speed
+echo '50' | sudo tee /sys/devices/platform/aorus_laptop/fan_custom_speed
 ```
 
 ## Charging mode
@@ -56,15 +56,15 @@ echo '50' | sudo tee /sys/devices/platform/gigabyte_laptop/fan_custom_speed
 
 Aero/AORUS laptops support two charging modes: Normal (0) and custom (1). The custom charging mode simply stops the laptop from passing its charging limit.
 
-**Node:** `/sys/devices/platform/gigabyte_laptop/charge_mode`
+**Node:** `/sys/devices/platform/aorus_laptop/charge_mode`
 
 ## Charging limit
 
 Aero/AORUS laptops support a charging limit. Charging mode must be set to custom for it to take effect. It will only accept numbers between 60 and 100.
 
-**Node:** `/sys/devices/platform/gigabyte_laptop/charge_limit`
+**Node:** `/sys/devices/platform/aorus_laptop/charge_limit`
 
 **Example:** To set the charging limit to 80 percent:
 ```
-echo '80' | sudo tee /sys/devices/platform/gigabyte_laptop/charge_limit
+echo '80' | sudo tee /sys/devices/platform/aorus_laptop/charge_limit
 ```
