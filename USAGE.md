@@ -11,12 +11,6 @@ You can write to these nodes using `echo` and `tee`. Keep in mind that you must 
 
 ## Fan modes
 
-**Disclaimer:** The kernel driver currently cannot enable silent fan mode on the following models:
-* [Aero 14-W/K](https://www.gigabyte.com/Laptop/AERO-14--GTX-970M-965M)
-* [Aero 14-W6](https://www.gigabyte.com/Laptop/AERO-14--GTX-1060)
-* [Aero 14-W7](https://www.gigabyte.com/Laptop/AERO-14--i7-7700HQ)
-* [Aero 14-K8](https://www.gigabyte.com/us/Laptop/AERO-14--i7-8750H)
-
 Aero/AORUS laptops currently support six fan modes. They are implemented in the kernel driver and recognized in the following order, starting from zero:
 - Normal mode
 - Silent mode
