@@ -77,6 +77,7 @@ struct gigabyte_laptop_wmi {
 	u8 fan_silent_method;
 	struct fan_curve_data fan_curve;
 	int fan_curve_index;
+	u8 debug_method;
 };
 
 static struct platform_device *platform_device;
@@ -648,6 +649,32 @@ static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *a
 	return sysfs_emit(buf, "%d\n", max(cyc1, cyc2));
 }
 
+static ssize_t debug_method_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	u8 data;
+	struct gigabyte_laptop_wmi *gigabyte;
+
+	ret = kstrtou8(buf, 0, &data);
+	if (ret)
+		return ret;
+
+	gigabyte = dev_get_drvdata(dev);
+	gigabyte->debug_method = data;
+	return count;
+}
+
+static ssize_t debug_method_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret, output;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	ret = gigabyte_laptop_get_devstate(gigabyte->debug_method, &output);
+	if (ret)
+		return ret;
+	return sysfs_emit(buf, "%d, %d\n", gigabyte->debug_method, output);
+}
+
 #define TOGGLE_DEVICE(_device, _id) \
 static ssize_t _device##_toggle_show(struct device *dev, struct device_attribute *attr, char *buf) \
 { \
@@ -669,6 +696,7 @@ static DEVICE_ATTR_RW(gpu_boost);
 static DEVICE_ATTR_RW(fan_curve_index);
 static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
+static DEVICE_ATTR_RW(debug_method);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_mode.attr,
@@ -681,6 +709,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_curve_index.attr,
 	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
+	&dev_attr_debug_method.attr,
 	NULL
 };
 
