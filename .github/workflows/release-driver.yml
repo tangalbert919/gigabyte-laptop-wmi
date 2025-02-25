@@ -29,20 +29,3 @@ jobs:
           files: |
             sum.txt
             driver.tar.gz
-  
-  generate-rpm:
-    name: Generate RPM
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: Generate RPM package
-        id: rpmbuild
-        uses: naveenrajm7/rpmbuild@master
-        with:
-          spec_file: pkg-files/aorus-laptop-kmod.spec
-      - name: Upload RPM package
-        uses: actions/upload-artifact@v4
-        with:
-          name: aorus-laptop-kmod
-          path: ${{ steps.rpmbuild.outputs.rpm_dir_path }}
