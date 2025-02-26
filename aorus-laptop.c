@@ -78,6 +78,7 @@ struct gigabyte_laptop_wmi {
 	struct fan_curve_data fan_curve;
 	int fan_curve_index;
 	u8 debug_method;
+	u8 dual_fan_speed_enabled;
 };
 
 static struct platform_device *platform_device;
@@ -460,6 +461,11 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 		return ret;
 
 	gigabyte = dev_get_drvdata(dev);
+	if (gigabyte->dual_fan_speed_enabled) {
+		// We can't modify FAN2 through WMI without modifying GFTY, which
+		// already changes on its own.
+		ret = ec_write(0xB1, real_speed);
+	}
 	gigabyte->fan_custom_display_speed = speed;
 	gigabyte->fan_custom_internal_speed = real_speed;
 	return count;
@@ -784,7 +790,7 @@ static int probe_custom_fan_speed(int speed)
 static int gigabyte_laptop_probe(struct device *dev)
 {
 	int ret, output;
-	u8 result;
+	u8 result, result2;
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
 	// Older devices are using a different method ID for silent fan mode.
@@ -850,6 +856,23 @@ obtain_custom_fan_speed:
 		gigabyte->fan_custom_display_speed = probe_custom_fan_speed(output);
 		gigabyte->fan_custom_internal_speed = output;
 	}
+
+	/*
+		Some newer models don't change both fans' speed together through
+		FAN_CUSTOM_SPEED. If this is the case, we will have to modify FAN2
+		directly using ec_write. Doing it through WMI would be better if
+		we did not also have to modify GFTY as well, which already changes
+		on its own without us doing anything.
+	*/
+	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, 255, &output);
+	ec_read(0xB0, &result);
+	ec_read(0xB1, &result2);
+	if (result != result2) {
+		pr_info("Dual fan speed control required\n");
+		gigabyte->dual_fan_speed_enabled = 1;
+	}
+	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED,
+		gigabyte->fan_custom_internal_speed, &output);
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
 	if (ret)
