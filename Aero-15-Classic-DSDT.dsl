@@ -60328,7 +60328,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                     {
                         Return ((^^LPCB.ECDV.SCEN ^ One))
                     }
-                    Case (0xD0)
+                    Case (0xD0) // 10
                     {
                         Return (^^LPCB.ECDV.USBC) /* \_SB_.PCI0.LPCB.ECDV.USBC */
                     }
@@ -60368,7 +60368,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                     {
                         Return (^^LPCB.ECDV.TGP2) /* \_SB_.PCI0.LPCB.ECDV.TGP2 */
                     }
-                    Case (0xE4)
+                    Case (0xE4) // 20
                     {
                         Return (^^LPCB.ECDV.RPM1) /* \_SB_.PCI0.LPCB.ECDV.RPM1 */
                     }
@@ -60408,7 +60408,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                     {
                         Return (^^LPCB.ECDV.NTEX) /* \_SB_.PCI0.LPCB.ECDV.NTEX */
                     }
-                    Case (0x6A)
+                    Case (0x6A) // 30
                     {
                         Return (^^LPCB.ECDV.ADJF) /* \_SB_.PCI0.LPCB.ECDV.ADJF */
                     }
@@ -60451,7 +60451,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                     {
                         Return (^^LPCB.ECDV.FDTY) /* \_SB_.PCI0.LPCB.ECDV.FDTY */
                     }
-                    Case (0x61)
+                    Case (0x61) // 39 methods in WMBC
                     {
                         ^^LPCB.ECDV.BHEA = Zero
                         SDSE (0x90, Arg2)
@@ -60551,7 +60551,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 LSTE,   1, 
                 SCIO,   1, 
                 THRS,   1, 
-                WNON,   1, // 0x02.6 (Wifi)
+                WNON,   1, // 0x02.6 (Wifi, WMI method 0xCA)
                 P2ON,   1, 
                 SCEN,   1, // 0x03.0
                 INSS,   1, 
@@ -60579,7 +60579,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 PWSM,   1, 
                     ,   1, // 0x06.0
                 BFOK,   1, 
-                HDIN,   1, 
+                HDIN,   1, // 0x06.2 (unknown, used on AORUS, WMI method 0x85)
                 B20O,   1, 
                 ADJF,   1, // 0x06.4 (fixed mode)
                 ATOD,   1, 
@@ -60599,8 +60599,8 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 F10P,   1, 
                 NOGS,   1, 
                 D7FG,   1, 
-                CRAF,   1, // 0x08.6 (quiet mode fan)
-                FESC,   1, 
+                CRAF,   1, // 0x08.6 (quiet mode fan, eco mode in AORUS)
+                FESC,   1, // 0x08.7 (unknown, used in AORUS for some reason, WMI method 0x81)
                 CCDM,   1, // 0x09.0
                 FNBP,   1, 
                 FNB2,   1, 
@@ -60622,7 +60622,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 PL3E,   1, 
                 AC10,   1, 
                 B100,   1, 
-                FANB,   1, // 0x0C.4 (gaming mode fan)
+                FANB,   1, // 0x0C.4 (gaming mode fan, power mode in AORUS)
                 NVFN,   1, 
                 BDWP,   1, 
                 WIN8,   1, 
@@ -60688,7 +60688,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 TEMT,   16, 
                 PRSN,   16, 
                 Offset (0x7E), 
-                LUXH,   8, 
+                LUXH,   8,  // 0x7E (WMI method 0xF7, likely light sensor)
                 LUXL,   8, 
                 CA10,   16, // 0x80,0x81
                 CA20,   16, 
@@ -60735,7 +60735,7 @@ DefinitionBlock ("", "DSDT", 2, "GBT   ", "GBTUACPI", 0x01072009)
                 Offset (0xD5), 
                 ECTR,   8, 
                 FANL,   8, // 0xD6 (unknown)
-                KBLL,   8, // 0xD7 (keyboard backlight)
+                KBLL,   8, // 0xD7 (keyboard backlight, WMI method 0xF6)
                 KBL1,   8, 
                 KBBA,   8, 
                 NTEX,   8, 
