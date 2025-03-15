@@ -15,9 +15,9 @@ Provides:       aorus-laptop-kmod-common = %{?epoch:%{epoch}:}%{version}
 Common package for aorus-laptop drivers. Mostly empty.
 
 %install
-install -p -m 0644 -D %{SOURCE0} %{buildroot}%{_modprobedir}/aorus-laptop.conf
+install -p -m 0644 -D %{SOURCE0} %{buildroot}%{_sysconfdir}/modules-load.d/aorus-laptop.conf
 
 %files
-%{_modprobedir}/aorus-laptop.conf
+%{_sysconfdir}/modules-load.d/aorus-laptop.conf
 
 %changelog
