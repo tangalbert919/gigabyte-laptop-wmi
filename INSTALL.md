@@ -28,6 +28,8 @@ make
 sudo insmod aorus-laptop.ko
 ```
 
+The last command has to be run after every reboot. If you have updated the kernel, you must run `make` before loading the kernel module.
+
 ## How to remove
 
 If you have installed the kernel driver with DKMS, you can run this command to remove it from the DKMS tree:
