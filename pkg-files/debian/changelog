@@ -1,0 +1,5 @@
+aorus-laptop-dkms (0.1.0-1) stable; urgency=medium
+
+  * AORUS laptop DKMS Debian package
+
+ -- Albert Tang <tangalbert919@yahoo.com> Mon, 24 Mar 2025 10:48:00 -0500

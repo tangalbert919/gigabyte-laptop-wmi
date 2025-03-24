@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+MODULE = aorus-laptop
+VERSION = $(shell dpkg-parsechangelog | sed -n 's/^Version: //p')
+%:
+	dh $@ --parallel --with dkms
+
+override_dh_install:
+	cp ../dkms.conf .
+	sed -i dkms.conf -e "s/@PKGVER@/$(VERSION)/"
+	dh_install dkms.conf ../Makefile ../README.md ../aorus-laptop.c usr/src/$(MODULE)-$(VERSION)/
+	dh_install ../aorus-laptop.conf /etc/modules.load.d/
+	rm dkms.conf
+
+override_dh_dkms:
+	dh_dkms -V $(VERSION)
+
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
