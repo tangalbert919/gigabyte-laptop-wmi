@@ -1,0 +1,60 @@
+name: Release driver (debug)
+
+on:
+  push
+
+jobs:
+  build:
+    name: Generate driver tar file
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Generate archive
+        run: |
+          sed -e "s/@PKGVER@/0.1.0-rc1/" -i dkms.conf
+          tar -czf driver.tar.gz Makefile aorus-laptop.c dkms.conf
+      - name: Upload artifact
+        id: create_release
+        uses: actions/upload-artifact@v4
+        with:
+          name: driver.tar.gz
+          path: driver.tar.gz
+
+  publish:
+    name: Publish driver
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: fedora:39
+      options: --privileged
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dist: fc41
+            target: fedora-41-x86_64
+            arch: x86_64
+            version: 41
+          - dist: fc40
+            target: fedora-40-x86_64
+            arch: x86_64
+            version: 40
+    permissions: write-all
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Download driver
+        uses: actions/download-artifact@v4
+        with:
+          name: driver.tar.gz
+      - name: Build RPM
+        uses: ./.github/actions/build-rpm
+        id: rpm
+        with:
+          dist: ${{ matrix.dist }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          version: ${{ matrix.version }}
+
