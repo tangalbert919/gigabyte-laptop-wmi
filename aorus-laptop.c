@@ -577,9 +577,6 @@ static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr
 	return count;
 }
 
-/*
- * TODO: Implement fan curve (0x68)
- */
 static ssize_t fan_curve_index_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
