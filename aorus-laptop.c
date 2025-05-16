@@ -543,9 +543,6 @@ static ssize_t charge_limit_store(struct device *dev, struct device_attribute *a
 	return count;
 }
 
-/*
- * TODO: Implement GPU boost. (0x51)
- */
 static ssize_t gpu_boost_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
@@ -563,7 +560,8 @@ static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr
 	if (ret)
 		return ret;
 
-	if (mode > 1) {
+	// TODO: Check for AORUS laptops with 4 modes
+	if (mode > 3) {
 		pr_err("Invalid boost mode");
 		return -EINVAL;
 	}
