@@ -3,6 +3,7 @@
 **DISCLAIMER:** I recommend reading this entire document so you are able to use this kernel driver correctly. Incorrect usage may damage your machine.
 
 ## Where are the nodes?
+
 All available nodes are found at the following path:
 ```
 /sys/devices/platform/aorus_laptop
@@ -29,6 +30,7 @@ echo '2' | sudo tee /sys/devices/platform/aorus_laptop/fan_mode
 ```
 
 ## Custom fan speed
+
 Aero/AORUS laptops support setting a custom fan speed. However, this only takes effect if either auto or fixed mode is enabled.
 
 The kernel driver only supports numbers with the following requirements:
@@ -43,6 +45,7 @@ echo '50' | sudo tee /sys/devices/platform/aorus_laptop/fan_custom_speed
 ```
 
 ## Charging mode
+
 **Disclaimer:** Charging mode (and limit) is not supported on the following models:
 * [Aero 14-W/K](https://www.gigabyte.com/Laptop/AERO-14--GTX-970M-965M)
 * [Aero 14-W6](https://www.gigabyte.com/Laptop/AERO-14--GTX-1060)
@@ -96,7 +99,9 @@ Aero/AORUS laptops support battery cycles, but are only accessible through the e
 
 **Disclaimer:** Models older than the [Aero 15 X9 Series](https://www.gigabyte.com/Laptop/AERO-15--RTX-20-Series) do not support this, as it requires NVIDIA's Dynamic Boost from their Max-Q technologies.
 
-Aero/AORUS laptops support boosting the GPU's power limit. This seems to only matter on devices made between 2019 and 2021, as newer models have no way to check if this is enabled from the embedded controller.
+Aero/AORUS laptops support boosting the discrete GPU's power limit. Even though this is controlled by `nvidia-powerd`, the embedded controller can control this as well.
+
+Laptops with RTX 3000 series GPUs or newer have three different modes, while older models have one.
 
 **Node:** `/sys/devices/platform/aorus_laptop/gpu_boost`
 
