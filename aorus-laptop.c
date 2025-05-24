@@ -68,15 +68,17 @@ struct fan_curve_data {
 struct gigabyte_laptop_wmi {
 	struct platform_device *pdev;
 	struct device *hwmon_dev;
+	struct fan_curve_data fan_curve;
+
 	int fan_mode;
 	int fan_custom_display_speed;
 	int fan_custom_internal_speed;
 	int charge_mode;
 	int charge_limit;
 	int gpu_boost;
-	u8 fan_silent_method;
-	struct fan_curve_data fan_curve;
 	int fan_curve_index;
+
+	u8 fan_silent_method;
 	u8 debug_method;
 	u8 dual_fan_speed_enabled;
 };
