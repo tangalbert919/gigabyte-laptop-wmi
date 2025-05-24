@@ -109,6 +109,20 @@ static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, int *result)
 	obj = buffer.pointer;
 	if (obj && obj->type == ACPI_TYPE_INTEGER)
 		*result = obj->integer.value;
+	else if (obj && obj->type == ACPI_TYPE_BUFFER) {
+		if (obj->buffer.length == 0) {
+			kfree(obj);
+			return -ENODATA;
+		}
+		pr_info("This works\n");
+		pr_info("ACPI buffer length: %u\n", obj->buffer.length);
+		pr_info("ACPI buffer contents: \n");
+
+		for (int i = 0; i < obj->buffer.length; i++) {
+			pr_info("%02x \n", obj->buffer.pointer[i]);
+		}
+		//memcpy(result, obj->buffer.pointer, obj->buffer.length);
+	}
 	else {
 		kfree(obj);
 		return -EINVAL;
