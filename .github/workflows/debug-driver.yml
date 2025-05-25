@@ -36,10 +36,10 @@ jobs:
             target: fedora-41-x86_64
             arch: x86_64
             version: 41
-          - dist: fc40
-            target: fedora-40-x86_64
+          - dist: fc42
+            target: fedora-42-x86_64
             arch: x86_64
-            version: 40
+            version: 42
     permissions: write-all
 
     steps:
