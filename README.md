@@ -1,20 +1,22 @@
 # gigabyte-laptop-wmi
 
 This is an experimental kernel driver for Gigabyte Aero/AORUS laptops to
-interact with the embedded controller.
+interact with the embedded controller. This allows for fan controls and custom
+charging without the need to reboot into Windows.
 
-Gigabyte Gaming series laptops are not supported. Since they are just rebadged
-Clevo laptops (specifically, the NP5x and NP7x series), you can just use
+Gigabyte Gaming models (2024 and older) are not supported. Since they are just
+rebadged Clevo laptops (specifically, the NP5x and NP7x series), you can just use
 [these drivers](https://github.com/wessel-novacustom/clevo-keyboard/tree/master).
 
 ## Overview
 
 Virtually all Gigabyte laptops have most of their sensor data and controls in
 the embedded controller (EC), which can only be accessed through Gigabyte's
-Control Center on Windows. Because it is implemented as a WMI device,
-interacting with it on Linux is difficult.
+Control Center on Windows. Because it is implemented as a Windows Management
+Interface Device (WMI), interacting with it on Linux is difficult.
 
-This kernel driver enables interaction with the EC via WMI methods `WMBC` and `WMBD`. The controls are made available through sysfs, while the sensor data
+This kernel driver enables interaction with the EC via WMI methods `WMBC` and
+`WMBD`. The controls are made available through sysfs, while the sensor data
 are available through HWMON.
 
 The objective is to eliminate the need to use "hacks" to interact with the EC,
@@ -24,17 +26,21 @@ to set specific bits in EC memory ourselves (see [this repository](https://githu
 ## Model support
 
 The following models are currently supported:
+
 - All Aero 15/15X models made after 2018 (Intel Core i7-8750H or newer)
 - All Aero 17 models
 - The Aero 14 OLED (2023)
 - All AORUS models
 
 The following models are compatible, but **not** yet supported:
+
 - All Aero 14 models made before 2019 (see [this issue](https://github.com/tangalbert919/gigabyte-laptop-wmi/issues/7))
 - P series models (e.g. P56XT, P34W, P55W)
+- Gigabyte Gaming (2025+) models (e.g. A16 GA6H)
 
 The following models are not supported:
-- All Sabre models (retired in 2018) and Gigabyte Gaming models (both are rebadged
+
+- All Sabre models (retired in 2018) and Gigabyte Gaming (2024 and older) models (both are rebadged
 Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead)
 - All U series models
 
