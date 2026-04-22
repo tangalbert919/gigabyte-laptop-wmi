@@ -31,7 +31,7 @@ sudo insmod aorus-laptop.ko
 The last command has to be run after every reboot. If you have updated the kernel, you must run `make` before loading the kernel module.
 
 ### Method 3: As a nix module
-**Note:** save this as for example gigabyte-laptop-wmi.nix and call it in your configuration using boot.extraModulePackages = [ (config.boot.kernelPackages.callPackage ./gigabyte-laptop-wmi.nix {}) ];
+**Note:** save this as for example gigabyte-laptop-wmi.nix and call it in your configuration using boot.extraModulePackages = [ (config.boot.kernelPackages.callPackage ./gigabyte-laptop-wmi.nix {}) ]; and load it with boot.kernelModules = [ "aorus-laptop" ];
 
 ```
 { stdenv, lib, fetchFromGitHub, kernel, kernelModuleMakeFlags, kmod }:
