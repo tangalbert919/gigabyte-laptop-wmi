@@ -459,6 +459,13 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 	return count;
 }
 
+static ssize_t fan_pwm_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	return sysfs_emit(buf, "%d\n", gigabyte->fan_custom_internal_speed);
+}
+
 /*
  * Charge mode.
  * 0 = default mode
@@ -709,6 +716,7 @@ TOGGLE_DEVICE(usb_charge_s4, USB_HIBERNATE);
 
 static DEVICE_ATTR_RW(fan_mode);
 static DEVICE_ATTR_RW(fan_custom_speed);
+static DEVICE_ATTR_RO(fan_pwm);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
 static DEVICE_ATTR_RW(gpu_boost);
@@ -722,6 +730,7 @@ static DEVICE_ATTR_RW(debug_method);
 static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_mode.attr,
 	&dev_attr_fan_custom_speed.attr,
+	&dev_attr_fan_pwm.attr,
 	&dev_attr_charge_mode.attr,
 	&dev_attr_charge_limit.attr,
 	&dev_attr_usb_charge_s3_toggle.attr,
