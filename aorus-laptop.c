@@ -205,6 +205,8 @@ static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sen
 			switch (attr) {
 				case hwmon_pwm_input:
 					return 0444;
+				case hwmon_pwm_enable:
+					return 0444;
 				default:
 					break;
 			}
@@ -259,11 +261,19 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 				*val = convert_fan_rpm(output);
 			break;
 		case hwmon_pwm:
-			ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_SPEED, &output);
-			if (ret)
-				break;
-			*val = output;
-			break;
+			switch (attr) {
+				case hwmon_pwm_input:
+					ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_SPEED, &output);
+					if (ret)
+						break;
+					*val = output;
+					break;
+				case hwmon_pwm_enable:
+					*val = 0;
+					break;
+				default:
+					break;
+			}
 		default:
 			break;
 	}
@@ -281,7 +291,7 @@ static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 				HWMON_F_INPUT,
 				HWMON_F_INPUT),
 	HWMON_CHANNEL_INFO(pwm,
-				HWMON_PWM_INPUT),
+				HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
 	NULL
 };
 
