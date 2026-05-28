@@ -849,7 +849,7 @@ static void __exit gigabyte_laptop_exit(void)
 {
 	struct gigabyte_laptop_wmi *gigabyte;
 
-	pr_info("Goodbye, World!\n");
+	pr_info("Stopping AORUS WMI kernel driver\n");
 	gigabyte = platform_get_drvdata(platform_device);
 	hwmon_device_unregister(gigabyte->hwmon_dev);
 	sysfs_remove_group(&gigabyte->pdev->dev.kobj, &gigabyte_laptop_attr_group);
@@ -921,7 +921,7 @@ static int __init gigabyte_laptop_init(void)
 		pr_err("Probe failed\n");
 		goto fail_probe;
 	}
-	pr_info("Hello, World!\n");
+	pr_info("AORUS WMI kernel driver started\n");
 	return 0;
 
 fail_probe:
