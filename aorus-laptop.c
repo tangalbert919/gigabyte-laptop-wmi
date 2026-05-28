@@ -96,7 +96,7 @@ static u8 fan_modes[] = {
 /* WMI methods ********************************************/
 
 /* WMBC method (checks value in EC) */
-static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, int *result)
+static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, void *result)
 {
 	union acpi_object *obj;
 	acpi_status status;
@@ -109,7 +109,7 @@ static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, int *result)
 
 	obj = buffer.pointer;
 	if (obj && obj->type == ACPI_TYPE_INTEGER)
-		*result = obj->integer.value;
+		*(int *)result = obj->integer.value;
 	// TODO: Fix copying data to pointer
 	else if (obj && obj->type == ACPI_TYPE_BUFFER) {
 		if (obj->buffer.length == 0) {
@@ -133,7 +133,7 @@ static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, int *result)
 	return 0;
 }
 
-static int gigabyte_laptop_get_devstate(u32 method_id, int *result) {
+static int gigabyte_laptop_get_devstate(u32 method_id, void *result) {
 	return gigabyte_laptop_get_devstate2(method_id, 0, result);
 }
 
