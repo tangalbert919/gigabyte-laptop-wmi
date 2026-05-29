@@ -27,21 +27,16 @@ to set specific bits in EC memory ourselves (see [this repository](https://githu
 
 The following models are currently supported:
 
-- All Aero 15/15X models made after 2018 (Intel Core i7-8750H or newer)
-- All Aero 17 models
-- The Aero 14 OLED (2023)
+- All Aero models
 - All AORUS models
-
-The following models are compatible, but **not** yet supported:
-
-- All Aero 14 models made before 2019 (see [this issue](https://github.com/tangalbert919/gigabyte-laptop-wmi/issues/7))
-- P series models (e.g. P56XT, P34W, P55W)
 - Gigabyte Gaming (2025+) models (e.g. A16 GA6H)
+- P series models (e.g. P56XT, P34W, P55W)
 
 The following models are not supported:
 
-- All Sabre models (retired in 2018) and Gigabyte Gaming (2024 and older) models (both are rebadged
-Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead)
+- All Sabre models
+- Gigabyte Gaming (2024 and older, e.g. G5/G7) models
+  - Sabre and Gigabyte Gaming models are rebadged Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead)
 - All U series models
 
 ## Installation/Usage
