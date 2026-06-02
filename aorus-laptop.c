@@ -87,6 +87,7 @@ struct gigabyte_laptop_wmi {
 	u8 fan_silent_method;
 	u8 debug_method;
 	u8 dual_fan_speed_enabled;
+	u8 light_sensor_method;
 };
 
 static struct platform_device *platform_device;
@@ -638,6 +639,24 @@ static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *a
 	return sysfs_emit(buf, "%d\n", max(cyc1, cyc2));
 }
 
+static ssize_t light_sensor_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret, output_old;
+	u8 output[4];
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	if (gigabyte->light_sensor_method == LIGHT_SENSOR_NEW)
+		ret = gigabyte_laptop_get_devstate(gigabyte->light_sensor_method, &output);
+	else
+		ret = gigabyte_laptop_get_devstate(gigabyte->light_sensor_method, &output_old);
+	if (ret)
+		return ret;
+	if (gigabyte->light_sensor_method == LIGHT_SENSOR_NEW)
+		return sysfs_emit(buf, "%d %d %d %d\n", output[0], output[1], output[2], output[3]);
+	else
+		return sysfs_emit(buf, "%d\n", output_old);
+}
+
 static ssize_t power_on_time_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	int ret;
@@ -697,6 +716,7 @@ static DEVICE_ATTR_RW(gpu_boost);
 static DEVICE_ATTR_RW(fan_curve_index);
 static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
+static DEVICE_ATTR_RO(light_sensor);
 static DEVICE_ATTR_RO(power_on_time);
 static DEVICE_ATTR_RW(debug_method);
 
@@ -711,6 +731,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_curve_index.attr,
 	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
+	&dev_attr_light_sensor.attr,
 	&dev_attr_power_on_time.attr,
 	&dev_attr_debug_method.attr,
 	NULL
@@ -854,6 +875,20 @@ obtain_custom_fan_speed:
 			gigabyte->fan_curve.temperature[i] = output;
 			gigabyte->fan_curve.speed[i] = output >> 8;
 		}
+	}
+
+	// Test for new light sensor method. Older models don't support it.
+	u8 light_sensor_result[4];
+	ret = gigabyte_laptop_get_devstate(LIGHT_SENSOR_NEW, &light_sensor_result);
+	if (ret)
+		return ret;
+	if (light_sensor_result[0] == 0xF7) {
+		gigabyte->light_sensor_method = LIGHT_SENSOR_NEW;
+		pr_info("Using new light sensor method\n");
+	}
+	else {
+		gigabyte->light_sensor_method = LIGHT_SENSOR;
+		pr_info("Using old light sensor method\n");
 	}
 
 	return 0;
