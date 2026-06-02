@@ -58,6 +58,12 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define FAN_FOUR_RPM     0xE9 // 2023 AORUS 17X
 #define FAN_SILENT_OLD   0xFA // Older Aero and P-series models
 
+// Adding support (WIP)
+#define CPU_FAN_DUTY     0x46 // Aero 15 VB
+#define GPU_FAN_DUTY     0x47 // Aero 15 VB
+#define LIGHT_SENSOR     0xF7 // WARNING: Behavior changes in VE models
+#define LIGHT_SENSOR_NEW 0xFC // Added in VE models, returns as buffer
+
 // Fan curves
 #define FAN_CURVE_POINTS 15
 
