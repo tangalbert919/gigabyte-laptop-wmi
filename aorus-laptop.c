@@ -34,6 +34,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 // Not supported by Aero 14 W
 #define GPU_QBOOST       0x51
 #define FAN_SILENT_MODE  0x57
+#define POWER_ON_TIME    0x63
 #define CHARGING_MODE    0x64
 #define CHARGING_LIMIT   0x65
 // Supported by Aero 14 W
@@ -123,7 +124,7 @@ static int gigabyte_laptop_get_devstate2(u32 method_id, u32 arg2, void *result)
 		for (int i = 0; i < obj->buffer.length; i++) {
 			pr_info("%02x \n", obj->buffer.pointer[i]);
 		}*/
-		//memcpy(result, obj->buffer.pointer, obj->buffer.length);
+		memcpy(result, obj->buffer.pointer, obj->buffer.length);
 	}
 	else {
 		kfree(obj);
@@ -631,6 +632,18 @@ static ssize_t battery_cycle_show(struct device *dev, struct device_attribute *a
 	return sysfs_emit(buf, "%d\n", max(cyc1, cyc2));
 }
 
+static ssize_t power_on_time_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret;
+	u8 output[5];
+
+	ret = gigabyte_laptop_get_devstate(POWER_ON_TIME, &output);
+	if (ret)
+		return ret;
+	// day, hour, minute, month, year
+	return sysfs_emit(buf, "%d %d %d %d %d\n", output[0], output[1], output[2], output[3], output[4]);
+}
+
 static ssize_t debug_method_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
 	int ret;
@@ -678,6 +691,7 @@ static DEVICE_ATTR_RW(gpu_boost);
 static DEVICE_ATTR_RW(fan_curve_index);
 static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
+static DEVICE_ATTR_RO(power_on_time);
 static DEVICE_ATTR_RW(debug_method);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
@@ -691,6 +705,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_fan_curve_index.attr,
 	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
+	&dev_attr_power_on_time.attr,
 	&dev_attr_debug_method.attr,
 	NULL
 };
