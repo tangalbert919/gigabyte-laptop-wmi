@@ -439,14 +439,13 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 {
 	int ret, output;
 	unsigned int speed;
-	u8 real_speed;
 	struct gigabyte_laptop_wmi *gigabyte;
 
 	ret = kstrtouint(buf, 0, &speed);
 	if (ret)
 		return ret;
 
-	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, real_speed, &output);
+	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, speed, &output);
 	if (ret)
 		return ret;
 
@@ -454,9 +453,9 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 	if (gigabyte->dual_fan_speed_enabled) {
 		// We can't modify FAN2 through WMI without modifying GFTY, which
 		// already changes on its own.
-		ret = ec_write(0xB1, real_speed);
+		ret = ec_write(0xB1, speed);
 	}
-	gigabyte->fan_custom_speed = real_speed;
+	gigabyte->fan_custom_speed = speed;
 	return count;
 }
 
