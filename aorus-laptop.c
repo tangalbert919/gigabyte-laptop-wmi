@@ -38,6 +38,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define CHARGING_MODE    0x64
 #define CHARGING_LIMIT   0x65
 // Supported by Aero 14 W
+#define FAN_PWM          0x50
 #define FAN_CUSTOM_MODE  0x67
 #define FAN_INDEX_VALUE  0x68
 #define FAN_FIXED_MODE   0x6A
@@ -263,7 +264,7 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 		case hwmon_pwm:
 			switch (attr) {
 				case hwmon_pwm_input:
-					ret = gigabyte_laptop_get_devstate(FAN_CUSTOM_SPEED, &output);
+					ret = gigabyte_laptop_get_devstate(FAN_PWM, &output);
 					if (ret)
 						break;
 					*val = output;
@@ -486,9 +487,13 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 
 static ssize_t fan_pwm_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
-	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+	int ret, output;
 
-	return sysfs_emit(buf, "%d\n", gigabyte->fan_custom_internal_speed);
+	ret = gigabyte_laptop_get_devstate(FAN_PWM, &output);
+	if (ret)
+		return ret;
+
+	return sysfs_emit(buf, "%d\n", output);
 }
 
 /*
