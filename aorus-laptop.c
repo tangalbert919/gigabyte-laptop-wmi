@@ -476,10 +476,11 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 		return ret;
 
 	gigabyte = dev_get_drvdata(dev);
+	// On some models, FAN_CUSTOM_SPEED will only set CPU fan speed.
 	if (gigabyte->dual_fan_speed_enabled) {
-		// We can't modify FAN2 through WMI without modifying GFTY, which
-		// already changes on its own.
-		ret = ec_write(0xB1, speed);
+		ret = gigabyte_laptop_set_devstate(GPU_FAN_DUTY, speed, &output);
+		if (ret)
+			return ret;
 	}
 	gigabyte->fan_custom_speed = speed;
 	return count;
@@ -810,7 +811,7 @@ static const struct dmi_system_id gigabyte_laptop_known_working_platforms[] = {
 static int gigabyte_laptop_probe(struct device *dev)
 {
 	int ret, output;
-	u8 result, result2;
+	u8 result;
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
 	// Older devices are using a different method ID for silent fan mode.
@@ -876,21 +877,17 @@ obtain_custom_fan_speed:
 		gigabyte->fan_custom_speed = output;
 
 	/*
-		Some newer models don't change both fans' speed together through
-		FAN_CUSTOM_SPEED. If this is the case, we will have to modify FAN2
-		directly using ec_write. Doing it through WMI would be better if
-		we did not also have to modify GFTY as well, which already changes
-		on its own without us doing anything.
+		Newer models (VB and later) can have their fan speeds changed separately.
+		We should check if the model we are using supports this, and if not, we
+		will simply fall back to the old way of setting the fan speed.
 	*/
-	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, 255, &output);
-	ec_read(0xB0, &result);
-	ec_read(0xB1, &result2);
-	if (result != result2) {
+	ret = gigabyte_laptop_get_devstate(CPU_FAN_DUTY, &output);
+	if (ret)
+		return ret;
+	else if (output) {
 		pr_info("Dual fan speed control required\n");
 		gigabyte->dual_fan_speed_enabled = 1;
 	}
-	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED,
-		gigabyte->fan_custom_speed, &output);
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
 	if (ret)
