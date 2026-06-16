@@ -223,6 +223,7 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 	int ret, output;
 	u8 result;
 	u8 fan_channels[] = { FAN_CPU_RPM, FAN_GPU_RPM, FAN_THREE_RPM, FAN_FOUR_RPM };
+	u8 fan_pwm_channels[] = { FAN_PWM, GPU_FAN_DUTY };
 
 	switch (type) {
 		case hwmon_temp:
@@ -264,7 +265,7 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 		case hwmon_pwm:
 			switch (attr) {
 				case hwmon_pwm_input:
-					ret = gigabyte_laptop_get_devstate(FAN_PWM, &output);
+					ret = gigabyte_laptop_get_devstate(fan_pwm_channels[channel], &output);
 					if (ret)
 						break;
 					*val = output;
@@ -292,6 +293,7 @@ static const struct hwmon_channel_info *gigabyte_laptop_hwmon_info[] = {
 				HWMON_F_INPUT,
 				HWMON_F_INPUT),
 	HWMON_CHANNEL_INFO(pwm,
+				HWMON_PWM_INPUT | HWMON_PWM_ENABLE,
 				HWMON_PWM_INPUT | HWMON_PWM_ENABLE),
 	NULL
 };
