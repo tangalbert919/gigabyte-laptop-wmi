@@ -32,10 +32,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dist: fc41
-            target: fedora-41-x86_64
+          - dist: fc43
+            target: fedora-43-x86_64
             arch: x86_64
-            version: 41
+            version: 43
           - dist: fc42
             target: fedora-42-x86_64
             arch: x86_64
