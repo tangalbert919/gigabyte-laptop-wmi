@@ -23,7 +23,7 @@ runs:
         echo "config_opts['print_main_output'] = True" >> /etc/mock/site-defaults.cfg
       shell: bash
     - name: Download driver
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v8
       with:
         name: driver.tar.gz
     - name: Set RPM
@@ -47,17 +47,17 @@ runs:
         cp /var/lib/mock/${{ inputs.target }}/result/${{ env.DKMSRPM }} .
       shell: bash
     - name: Upload RPM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.RPM }}
         path: ${{ env.RPM }}
     - name: Upload common RPM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.KMODRPM }}
         path: ${{ env.KMODRPM }}
     - name: Upload DKMS RPM
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{ env.DKMSRPM }}
         path: ${{ env.DKMSRPM }}

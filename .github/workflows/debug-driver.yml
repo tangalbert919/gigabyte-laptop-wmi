@@ -9,14 +9,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Generate archive
         run: |
-          sed -e "s/@PKGVER@/0.1.0-rc1/" -i dkms.conf
+          sed -e "s/@PKGVER@/0.1.0/" -i dkms.conf
           tar -czf driver.tar.gz Makefile aorus-laptop.c dkms.conf
       - name: Upload artifact
         id: create_release
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: driver.tar.gz
           path: driver.tar.gz
@@ -48,9 +48,9 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Download driver
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: driver.tar.gz
       - name: Build RPM
