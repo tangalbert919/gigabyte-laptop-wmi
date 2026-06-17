@@ -134,3 +134,36 @@ Aero/AORUS laptops support USB power output when they are asleep (S3) or in hibe
 /sys/devices/platform/aorus_laptop/usb_charge_s3_toggle
 /sys/devices/platform/aorus_laptop/usb_charge_s4_toggle
 ```
+
+## Power on time (added in version 0.2.0)
+
+Aero/AORUS laptops support "power on time", though its use is unknown. This node is read-only.
+
+**Node:** `/sys/devices/platform/aorus_laptop/power_on_time`
+
+## Light sensor (added in version 0.2.0)
+
+Aero/AORUS laptops support light sensors, but it's only equipped on some models. If no light sensor is installed, it will simply return `0` by default. This node is read-only.
+
+All VE and newer models (e.g. Aero 16 XE5) return four 8-bit values, while older models (e.g. Aero 15 VD) return a single 32-bit value. To calculate the sensor value on newer models, ignore the first value and combine the last three in reverse order using bit shift.
+
+```text
+# Format: 247 [low] [medium] [high]
+# Actual value (bit shift): [high] << 16 | [medium] << 8 | [low]
+# Actual value (arithmetic): [high]*65536 + [medium]*256 + [low]
+```
+
+**Node:** `/sys/devices/platform/aorus_laptop/light_sensor`
+
+## PWM (added in version 0.2.0)
+
+**Disclaimers:**
+
+- Models older than the [Aero 15 X9 Series](https://www.gigabyte.com/Laptop/AERO-15--RTX-20-Series) do not support this.
+- Models older than the [Aero 15 KB Series](https://www.gigabyte.com/Laptop/AERO-15--Intel-10th-Gen) use the same value for all fans.
+
+Aero/AORUS laptops support reading the current PWM for each fan. This should not be confused with the custom fan speed, which returns the PWM for use in custom fan mode.
+
+The sysfs and HWMON nodes are read-only, but support for writing to HWMON nodes will be added in the future. The sysfs node will only return the PWM for the CPU fan, while the HWMON nodes have separate channels for CPU and GPU fans.
+
+**Node:** `/sys/devices/platform/aorus_laptop/fan_pwm`
