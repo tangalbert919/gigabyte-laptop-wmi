@@ -36,7 +36,7 @@ The following models are not supported:
 
 - All Sabre models
 - Gigabyte Gaming (2024 and older, e.g. G5/G7) models
-  - Sabre and Gigabyte Gaming models are rebadged Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead)
+  - Sabre and Gigabyte Gaming models are rebadged Clevo laptops, use [this driver](https://github.com/wessel-novacustom/clevo-keyboard/tree/master) instead.
 - All U series models
 
 ## Installation/Usage
