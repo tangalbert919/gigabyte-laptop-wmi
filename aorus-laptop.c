@@ -452,10 +452,6 @@ static ssize_t fan_mode_store(struct device *dev, struct device_attribute *attr,
 	return count;
 }
 
-/*
- * Custom fan speed. Only works if custom mode is enabled.
- * Must be in multiples of five, between 25 and 100.
- */
 static ssize_t fan_custom_speed_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
