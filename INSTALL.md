@@ -2,6 +2,8 @@
 
 ## How to install
 
+For all methods, you must copy `aorus-laptop.conf` to `/etc/modules-load.d/` so the kernel module is loaded on boot automatically.
+
 ### Method 1: Using DKMS
 
 **Note:** If you have Secure Boot enabled, you must follow [these instructions](https://github.com/dell/dkms?tab=readme-ov-file#secure-boot) or the module will not load.
