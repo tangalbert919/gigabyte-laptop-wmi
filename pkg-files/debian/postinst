@@ -1,0 +1,33 @@
+#!/bin/sh -x
+
+NAME=aorus-laptop
+PKGNAME=$NAME-dkms
+VERSION=$(dpkg-query -W -f='${Version}' $PKGNAME | awk -F "-" '{print $1}' | cut -d\: -f2)
+ARCH=$(dpkg --print-architecture)
+
+dkms_configure() {
+    for POSTINST in /usr/lib/dkms/common.postinst "/usr/share/$PKGNAME/postinst" ; do
+        if [ -f "$POSTINST" ] ; then
+            nohup "$POSTINST" "$NAME" "$VERSION" "/usr/share/$PKGNAME" "$ARCH" "$2"
+            return $?
+        fi
+        echo "$POSTINST does not exist" >&2
+    done
+    return 1
+}
+
+case "$1" in
+    configure)
+        dkms_configure
+    ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

@@ -3,7 +3,7 @@
 Name:           %{module}-dkms
 
 Version:        0.1.0
-Release:        2%{?dist}
+Release:        1%{?dist}
 Summary:        DKMS package for Gigabyte laptop kernel module
 
 License:        GPL

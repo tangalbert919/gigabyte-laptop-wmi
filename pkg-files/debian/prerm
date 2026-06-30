@@ -1,0 +1,20 @@
+#!/bin/sh
+
+NAME=aorus-laptop
+VERSION=0.1.0
+
+set -e
+
+case "$1" in
+    remove|upgrade|dconfigure)
+        if [ "`dkms status -m $NAME`"]; then
+            dkms remove -m $NAME -v $VERSION --all
+        fi
+    ;;
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

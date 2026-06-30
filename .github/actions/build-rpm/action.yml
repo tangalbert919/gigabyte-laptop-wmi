@@ -1,0 +1,63 @@
+name: Build RPMs
+
+inputs:
+  dist:
+    description: 'Distribution'
+    required: true
+  target:
+    description: 'Target'
+    required: true
+  arch:
+    description: 'Architecture'
+    required: true
+  version:
+    description: 'Version'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install dependencies
+      run: |
+        dnf -y install mock rpm-build
+        echo "config_opts['print_main_output'] = True" >> /etc/mock/site-defaults.cfg
+      shell: bash
+    - name: Download driver
+      uses: actions/download-artifact@v4
+      with:
+        name: driver.tar.gz
+    - name: Set RPM
+      run: |
+        VERSION=$(rpm -q --qf "%{VERSION}\n" --specfile pkg-files/rpm/aorus-laptop-kmod.spec | head -1)
+        RELEASE=$(rpm -q --qf "%{RELEASE}\n" --specfile pkg-files/rpm/aorus-laptop-kmod.spec | cut -d. -f1 | head -1)
+        RPM=akmod-aorus-laptop-${VERSION}-${RELEASE}.${{ inputs.dist }}.${{ inputs.arch }}.rpm
+        KMODRPM=aorus-laptop-kmod-common-${VERSION}-${RELEASE}.${{ inputs.dist }}.${{ inputs.arch }}.rpm
+        DKMSRPM=aorus-laptop-dkms-${VERSION}-${RELEASE}.${{ inputs.dist }}.noarch.rpm
+        echo "RPM=${RPM}" >> $GITHUB_ENV
+        echo "KMODRPM=${KMODRPM}" >> $GITHUB_ENV
+        echo "DKMSRPM=${DKMSRPM}" >> $GITHUB_ENV
+      shell: bash
+    - name: Build RPM
+      run: |
+        mock -r ${{ inputs.target }} --rebuild --spec=pkg-files/rpm/aorus-laptop-kmod.spec --sources=. -a https://download1.rpmfusion.org/free/fedora/releases/${{ inputs.version }}/Everything/x86_64/os/
+        cp /var/lib/mock/${{ inputs.target }}/result/${{ env.RPM }} .
+        mock -r ${{ inputs.target }} --rebuild --spec=pkg-files/rpm/aorus-laptop-kmod-common.spec --sources=.
+        cp /var/lib/mock/${{ inputs.target }}/result/${{ env.KMODRPM }} .
+        mock -r ${{ inputs.target }} --rebuild --spec=pkg-files/rpm/aorus-laptop-dkms.spec --sources=.
+        cp /var/lib/mock/${{ inputs.target }}/result/${{ env.DKMSRPM }} .
+      shell: bash
+    - name: Upload RPM
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.RPM }}
+        path: ${{ env.RPM }}
+    - name: Upload common RPM
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.KMODRPM }}
+        path: ${{ env.KMODRPM }}
+    - name: Upload DKMS RPM
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.DKMSRPM }}
+        path: ${{ env.DKMSRPM }}

@@ -18,7 +18,7 @@ Summary:        Akmod package for Gigabyte laptop kernel module
 
 License:        GPL
 URL:            https://github.com/tangalbert919/gigabyte-laptop-wmi
-Source0:        aorus-laptop-0.1.0.tar.xz
+Source0:        driver.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
 

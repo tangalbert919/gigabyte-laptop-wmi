@@ -1,0 +1,13 @@
+Source: aorus-laptop-dkms
+Maintainer: Albert Tang <tangalbert919@yahoo.com>
+Build-Depends:
+ dh-sequence-dkms, debhelper (>=11~)
+Rules-Requires-Root: no
+Homepage: https://github.com/tangalbert919/gigabyte-laptop-wmi
+Vcs-Git: https://github.com/tangalbert919/gigabyte-laptop-wmi
+
+Package: aorus-laptop-dkms
+Architecture: amd64
+Version: 0.1.0
+Depends: dkms
+Description: Kernel driver for Aero/AORUS laptops
