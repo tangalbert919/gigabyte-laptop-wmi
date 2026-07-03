@@ -18,6 +18,11 @@ jobs:
           tar -czf driver.tar.gz Makefile aorus-laptop.c dkms.conf
       - name: Get checksum
         run: sha256sum driver.tar.gz | tee sum.txt
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: driver.tar.gz
+          path: driver.tar.gz
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -29,3 +34,53 @@ jobs:
           files: |
             sum.txt
             driver.tar.gz
+
+  build-fedora:
+    name: Build Fedora packages
+    runs-on: ubuntu-latest
+    needs: build
+    container:
+      image: fedora:latest
+      options: --privileged
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dist: fc44
+            target: fedora-44-x86_64
+            arch: x86_64
+            version: 44
+          - dist: fc43
+            target: fedora-43-x86_64
+            arch: x86_64
+            version: 43
+          - dist: fc42
+            target: fedora-42-x86_64
+            arch: x86_64
+            version: 42
+    permissions: write-all
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Download driver
+        uses: actions/download-artifact@v8
+        with:
+          name: driver.tar.gz
+      - name: Build RPM
+        uses: ./.github/actions/build-rpm
+        id: rpm
+        with:
+          dist: ${{ matrix.dist }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          version: ${{ matrix.version }}
+      - name: Upload packages
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          draft: false
+          prerelease: false
+          files: |
+            *.rpm
