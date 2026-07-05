@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Generate archive
         run: |
           sed -e "s/@PKGVER@/$(git tag --points-at HEAD)/" -i dkms.conf
@@ -25,7 +25,7 @@ jobs:
           path: driver.tar.gz
       - name: Create Release
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
