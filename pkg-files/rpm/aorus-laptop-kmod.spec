@@ -12,7 +12,7 @@
 # name should have a -kmod suffix
 Name:           aorus-laptop-kmod
 
-Version:        0.1.0
+Version:        0.2.0
 Release:        1%{?dist}
 Summary:        Akmod package for Gigabyte laptop kernel module
 
