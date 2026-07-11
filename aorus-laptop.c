@@ -812,14 +812,17 @@ static int gigabyte_laptop_probe(struct device *dev)
 	u8 result;
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
 
-	// Older devices are using a different method ID for silent fan mode.
-	// In that case, newer devices won't return anything when using that ID.
-	ret = gigabyte_laptop_get_devstate(FAN_SILENT_OLD, &output);
-	if (output < 0) { // -1 on newer devices
+	// Silent fan mode uses selector 0x57 on newer models, 0xFA on older ones.
+	// The original probe read 0xFA and treated a 0 return as "old", but 2025+
+	// AMD AERO firmware returns 0 for unimplemented selectors too, so this
+	// chassis was mis-detected as old and silent mode fell through to the empty
+	// WMBD 0xFA case. Feature-detect 0x57 directly instead.
+	ret = gigabyte_laptop_get_devstate(FAN_SILENT_MODE, &output);
+	if (ret == 0) { // 0x57 present -> newer model
 		pr_info("Newer model detected, using new silent fan mode ID");
 		gigabyte->fan_silent_method = FAN_SILENT_MODE;
 	}
-	else { // 0 on older devices
+	else {
 		pr_info("Older model detected, using old ID");
 		gigabyte->fan_silent_method = FAN_SILENT_OLD;
 	}
