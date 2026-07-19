@@ -8,6 +8,6 @@ Vcs-Git: https://github.com/tangalbert919/gigabyte-laptop-wmi
 
 Package: aorus-laptop-dkms
 Architecture: amd64
-Version: 0.1.0
+Version: 0.2.0
 Depends: dkms
 Description: Kernel driver for Aero/AORUS laptops

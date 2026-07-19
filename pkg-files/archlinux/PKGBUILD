@@ -2,7 +2,7 @@
 
 pkgbase=aorus-laptop
 pkgname=aorus-laptop-dkms
-pkgver=0.1.0_rc1
+pkgver=0.2.0
 pkgrel=1
 pkgdesc="Kernel module allowing more control on Gigabyte Aero/AORUS laptops"
 arch=('x86_64')
