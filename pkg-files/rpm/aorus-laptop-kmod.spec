@@ -13,7 +13,7 @@
 Name:           aorus-laptop-kmod
 
 Version:        0.2.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Akmod package for Gigabyte laptop kernel module
 
 License:        GPL
@@ -52,6 +52,9 @@ kmodtool  --target %{_target_cpu}  --repo rpmfusion --kmodname %{name} %{?buildf
 # pushd foo-%{version}
 # #patch0 -p1 -b .suffix
 # popd
+mkdir %{name}-%{version}
+mv aorus-laptop.c %{name}-%{version}
+mv Makefile %{name}-%{version}
 
 for kernel_version in %{?kernel_versions} ; do
     cp -a %{name}-%{version} _kmod_build_${kernel_version%%___*}
