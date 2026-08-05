@@ -30,9 +30,11 @@ runs:
       run: |
         VERSION=$(rpm -q --qf "%{VERSION}\n" --specfile pkg-files/rpm/aorus-laptop-kmod.spec | head -1)
         RELEASE=$(rpm -q --qf "%{RELEASE}\n" --specfile pkg-files/rpm/aorus-laptop-kmod.spec | cut -d. -f1 | head -1)
+        COMMON_RELEASE=$(rpm -q --qf "%{RELEASE}\n" --specfile pkg-files/rpm/aorus-laptop-kmod-common.spec | cut -d. -f1 | head -1)
+        DKMS_RELEASE=$(rpm -q --qf "%{RELEASE}\n" --specfile pkg-files/rpm/aorus-laptop-dkms.spec | cut -d. -f1 | head -1)
         RPM=akmod-aorus-laptop-${VERSION}-${RELEASE}.${{ inputs.dist }}.${{ inputs.arch }}.rpm
-        KMODRPM=aorus-laptop-kmod-common-${VERSION}-${RELEASE}.${{ inputs.dist }}.${{ inputs.arch }}.rpm
-        DKMSRPM=aorus-laptop-dkms-${VERSION}-${RELEASE}.${{ inputs.dist }}.noarch.rpm
+        KMODRPM=aorus-laptop-kmod-common-${VERSION}-${COMMON_RELEASE}.${{ inputs.dist }}.${{ inputs.arch }}.rpm
+        DKMSRPM=aorus-laptop-dkms-${VERSION}-${DKMS_RELEASE}.${{ inputs.dist }}.noarch.rpm
         echo "RPM=${RPM}" >> $GITHUB_ENV
         echo "KMODRPM=${KMODRPM}" >> $GITHUB_ENV
         echo "DKMSRPM=${DKMSRPM}" >> $GITHUB_ENV
