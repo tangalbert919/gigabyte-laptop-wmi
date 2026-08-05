@@ -257,7 +257,8 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 			if (ret)
 				break;
 			// Gigabyte Gaming laptops store fan RPM in little-endian
-			if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE GAMING"))
+			if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE GAMING") ||
+				!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO"))
 				*val = output;
 			else
 				*val = convert_fan_rpm(output);
