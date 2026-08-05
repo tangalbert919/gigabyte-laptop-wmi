@@ -815,6 +815,14 @@ static int gigabyte_laptop_probe(struct device *dev)
 
 	// Older devices are using a different method ID for silent fan mode.
 	// In that case, newer devices won't return anything when using that ID.
+	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE GAMING") ||
+		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO") ||
+		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"AORUS")) {
+		pr_info("Skipping silent fan mode ID check, this only applies to old models");
+		gigabyte->fan_silent_method = FAN_SILENT_MODE;
+		goto obtain_fan_mode;
+	}
+
 	ret = gigabyte_laptop_get_devstate(FAN_SILENT_OLD, &output);
 	if (output < 0) { // -1 on newer devices
 		pr_info("Newer model detected, using new silent fan mode ID");
@@ -825,6 +833,7 @@ static int gigabyte_laptop_probe(struct device *dev)
 		gigabyte->fan_silent_method = FAN_SILENT_OLD;
 	}
 
+obtain_fan_mode:
 	// Set silent fan mode ID.
 	fan_modes[1] = gigabyte->fan_silent_method;
 
