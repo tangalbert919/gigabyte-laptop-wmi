@@ -587,7 +587,7 @@ static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr
 
 	// TODO: Check for AORUS laptops with 4 modes
 	if (mode > 3) {
-		pr_err("Invalid boost mode");
+		pr_err("Invalid boost mode\n");
 		return -EINVAL;
 	}
 
@@ -818,18 +818,18 @@ static int gigabyte_laptop_probe(struct device *dev)
 	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE GAMING") ||
 		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO") ||
 		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"AORUS")) {
-		pr_info("Skipping silent fan mode ID check, this only applies to old models");
+		pr_info("Skipping silent fan mode ID check, this only applies to old models\n");
 		gigabyte->fan_silent_method = FAN_SILENT_MODE;
 		goto obtain_fan_mode;
 	}
 
 	ret = gigabyte_laptop_get_devstate(FAN_SILENT_OLD, &output);
 	if (output < 0) { // -1 on newer devices
-		pr_info("Newer model detected, using new silent fan mode ID");
+		pr_info("Newer model detected, using new silent fan mode ID\n");
 		gigabyte->fan_silent_method = FAN_SILENT_MODE;
 	}
 	else { // 0 on older devices
-		pr_info("Older model detected, using old ID");
+		pr_info("Older model detected, using old ID\n");
 		gigabyte->fan_silent_method = FAN_SILENT_OLD;
 	}
 
