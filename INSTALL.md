@@ -32,6 +32,59 @@ sudo insmod aorus-laptop.ko
 
 The last command has to be run after every reboot. If you have updated the kernel, you must run `make` before loading the kernel module.
 
+### Method 3: As a nix module
+**Note:** save this as for example gigabyte-laptop-wmi.nix and call it in your configuration
+```
+{ stdenv, lib, fetchFromGitHub, kernel, kernelModuleMakeFlags, kmod }:
+let
+  modPath = "drivers/gigabyte";
+  modDestDir = "$out/lib/modules/${kernel.modDirVersion}/kernel/${modPath}";
+
+in stdenv.mkDerivation rec {
+  pname = "gigabyte-laptop-wmi";
+  version = "0.1.0";
+
+  src = fetchFromGitHub {
+    owner = "tangalbert919";
+    repo = "gigabyte-laptop-wmi";
+    rev = "${version}";
+    sha256 = "sha256-+ZRyrI3PJRIEFEcOrKh9Zuhg07o/YMkycspOBPDAaeU=";
+  };
+
+  hardeningDisable = [ "pic" "format" ];
+  nativeBuildInputs = kernel.moduleBuildDependencies;
+
+  makeFlags = kernelModuleMakeFlags ++ [
+    "KERNELRELEASE=${kernel.modDirVersion}"
+    "KDIR=${kernel.dev}/lib/modules/${kernel.modDirVersion}/build"
+    "INSTALL_MOD_PATH=${modDestDir}"
+  ];
+
+  enableParallelBuilding = true;
+  installPhase = ''
+    runHook preInstall
+    mkdir -p ${modDestDir}
+    find . -name '*.ko' -exec cp --parents '{}' ${modDestDir} \;
+    find ${modDestDir} -name '*.ko' -exec xz -f '{}' \;
+    runHook postInstall
+  '';
+  meta = {
+    description = "Linux kernel module for Gigabyte laptops to interact with the embedded controller";
+    homepage = "https://github.com/tangalbert919/gigabyte-laptop-wmi";
+    license = lib.licenses.gpl2;
+    maintainers = [ lib.maintainers.makefu ];
+    platforms = lib.platforms.linux;
+  };
+}
+```
+Add to host's configuratiion using
+```
+boot = {
+  extraModulePackages = [ (config.boot.kernelPackages.callPackage ./gigabyte-laptop-wmi.nix {}) ];
+  kernelModules = [ "aorus-laptop" ];
+};
+```
+
 ## How to remove
 
 If you have installed the kernel driver with DKMS, you can run this command to remove it from the DKMS tree:
@@ -44,3 +97,5 @@ If you have installed the kernel driver manually, you can simply run this comman
 ```
 sudo rmmod aorus_laptop
 ```
+
+If you have installed the nix module, simply remove it from your configuration and nixos-rebuild switch
