@@ -89,6 +89,7 @@ struct gigabyte_laptop_wmi {
 	u8 debug_method;
 	u8 dual_fan_speed_enabled;
 	u8 light_sensor_method;
+	u8 has_dgpu_ejector;
 };
 
 static struct platform_device *platform_device;
@@ -586,6 +587,15 @@ static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr
 		return ret;
 
 	// TODO: Check for AORUS laptops with 4 modes
+
+	// Disable dGPU ejector mode for now
+	if (gigabyte->has_dgpu_ejector) {
+		if (mode >= 3) {
+			pr_err("dGPU ejecting disabled for now\n");
+			return -EINVAL;
+		}
+	}
+
 	if (mode > 3) {
 		pr_err("Invalid boost mode\n");
 		return -EINVAL;
@@ -932,6 +942,12 @@ obtain_custom_fan_speed:
 	else {
 		gigabyte->light_sensor_method = LIGHT_SENSOR;
 		pr_info("Using old light sensor method\n");
+	}
+
+	// AORUS VG and all Aero X16 models can eject dGPU
+	// For now, it's just Aero X16 until I can figure out VG model detection
+	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO")) {
+		gigabyte->has_dgpu_ejector = 1;
 	}
 
 	return 0;
