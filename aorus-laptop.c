@@ -944,9 +944,10 @@ obtain_custom_fan_speed:
 		pr_info("Using old light sensor method\n");
 	}
 
-	// AORUS VG and all Aero X16 models can eject dGPU
+	// AORUS VG, Gaming (2025+) and all Aero X16 models can eject dGPU
 	// For now, it's just Aero X16 until I can figure out VG model detection
-	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO")) {
+	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE AERO") ||
+		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"GIGABYTE GAMING")) {
 		gigabyte->has_dgpu_ejector = 1;
 	}
 
