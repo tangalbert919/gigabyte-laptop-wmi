@@ -711,7 +711,7 @@ static ssize_t power_on_time_show(struct device *dev, struct device_attribute *a
 	ret = gigabyte_laptop_get_devstate(POWER_ON_TIME, &output);
 	if (ret)
 		return ret;
-	// day, hour, minute, month, year
+	// year, month, day, hour, minute
 	return sysfs_emit(buf, "%d %d %d %d %d\n", output[0], output[1], output[2], output[3], output[4]);
 }
 
