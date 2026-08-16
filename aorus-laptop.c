@@ -715,6 +715,13 @@ static ssize_t power_on_time_show(struct device *dev, struct device_attribute *a
 	return sysfs_emit(buf, "%d %d %d %d %d\n", output[0], output[1], output[2], output[3], output[4]);
 }
 
+static ssize_t has_dgpu_ejector_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	return sysfs_emit(buf, "%d\n", gigabyte->has_dgpu_ejector);
+}
+
 static ssize_t debug_method_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
 {
 	int ret;
@@ -765,6 +772,7 @@ static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
 static DEVICE_ATTR_RO(light_sensor);
 static DEVICE_ATTR_RO(power_on_time);
+static DEVICE_ATTR_RO(has_dgpu_ejector);
 static DEVICE_ATTR_RW(debug_method);
 
 static struct attribute *gigabyte_laptop_attributes[] = {
@@ -781,6 +789,7 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_battery_cycle.attr,
 	&dev_attr_light_sensor.attr,
 	&dev_attr_power_on_time.attr,
+	&dev_attr_has_dgpu_ejector.attr,
 	&dev_attr_debug_method.attr,
 	NULL
 };
