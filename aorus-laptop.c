@@ -92,6 +92,12 @@ struct gigabyte_laptop_wmi {
 	u8 has_dgpu_ejector;
 };
 
+enum fan_ctrl {
+	AORUS_FAN_CTRL_DISABLED = 0,
+	AORUS_FAN_CTRL_AUTO = 1,
+	AORUS_FAN_CTRL_MANUAL = 2
+};
+
 static struct platform_device *platform_device;
 
 static u8 fan_modes[] = {
@@ -226,6 +232,8 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 	u8 fan_channels[] = { FAN_CPU_RPM, FAN_GPU_RPM, FAN_THREE_RPM, FAN_FOUR_RPM };
 	u8 fan_pwm_channels[] = { FAN_PWM, GPU_FAN_DUTY };
 
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
 	switch (type) {
 		case hwmon_temp:
 			switch (channel) {
@@ -273,7 +281,12 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					*val = output;
 					break;
 				case hwmon_pwm_enable:
-					*val = 0;
+					if (gigabyte->fan_mode < 3) // normal, gaming, silent
+						*val = AORUS_FAN_CTRL_DISABLED;
+					else if (gigabyte->fan_mode > 3) // auto-max or fixed
+						*val = AORUS_FAN_CTRL_AUTO;
+					else // the fan curve
+						*val = AORUS_FAN_CTRL_MANUAL;
 					break;
 				default:
 					break;
