@@ -16,6 +16,7 @@
 #include <linux/platform_device.h>
 #include <linux/module.h>
 #include <linux/wmi.h>
+#include <linux/string.h>
 
 #define GIGABYTE_LAPTOP_VERSION "0.01"
 #define GIGABYTE_LAPTOP_FILE  KBUILD_MODNAME
@@ -90,6 +91,8 @@ struct gigabyte_laptop_wmi {
 	u8 dual_fan_speed_enabled;
 	u8 light_sensor_method;
 	u8 has_dgpu_ejector;
+	u8 has_three_fans;
+	u8 has_four_fans;
 };
 
 enum fan_ctrl {
@@ -824,6 +827,13 @@ static const struct attribute_group gigabyte_laptop_attr_group = {
 		DMI_EXACT_MATCH(DMI_PRODUCT_NAME, name), \
 	}}
 
+// quirks
+#define DMI_MATCH_GIGABYTE_LAPTOP_NAME(name) \
+	{ .matches = { \
+		DMI_EXACT_MATCH(DMI_BOARD_VENDOR, "GIGABYTE"), \
+		DMI_MATCH(DMI_PRODUCT_NAME, name), \
+	}}
+
 static const struct dmi_system_id gigabyte_laptop_known_working_platforms[] = {
 	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY("AERO"),
 	DMI_EXACT_MATCH_GIGABYTE_LAPTOP_FAMILY("AORUS"),
@@ -836,6 +846,24 @@ static const struct dmi_system_id gigabyte_laptop_known_working_platforms[] = {
 	DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE("P64V7"),
 	{ }
 };
+
+static const struct dmi_system_id gigabyte_laptop_quirks_needed[] = {
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 15"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 16X"), // three fans
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17"),  // three fans
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X"), // four fans
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS Master 18"), // four fans
+	{ }
+};
+
+static int find_str(const char *dmi_name, const char *dmi_sub) {
+	char *pos = strstr(dmi_name, dmi_sub);
+	if (pos) {
+		pr_info("Found %s in %s\n", dmi_sub, dmi_name);
+		return 0;
+	}
+	return -1;
+}
 
 /* Driver init ********************************************/
 
@@ -975,6 +1003,21 @@ obtain_custom_fan_speed:
 	else if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY),"AORUS") &&
 		dmi_get_bios_year() >= 2024) {
 		gigabyte->has_dgpu_ejector = 1;
+	}
+
+	// Finally, check for quirks in the system
+	if (dmi_check_system(gigabyte_laptop_quirks_needed)) {
+		pr_info("Laptop has known issues, using quirks\n");
+		if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0 ||
+			(find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17") == 0 &&
+			dmi_get_bios_year() >= 2023)) {
+			gigabyte->has_three_fans = 1;
+		}
+		else if ((find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17X") == 0 &&
+			dmi_get_bios_year() >= 2023) ||
+			find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS Master 18") == 0) {
+			gigabyte->has_four_fans = 1;
+		}
 	}
 
 	return 0;
