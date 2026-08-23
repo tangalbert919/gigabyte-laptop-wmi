@@ -856,6 +856,16 @@ static const struct dmi_system_id gigabyte_laptop_quirks_needed[] = {
 	{ }
 };
 
+// Final models for AORUS 15/17/17X, only ones with dGPU ejector
+static const struct dmi_system_id gigabyte_laptop_dgpu_ejector_needed[] = {
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 15 BKG"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17 BSG"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17 BKG"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AZG"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AXG"),
+	{ }
+};
+
 static int find_str(const char *dmi_name, const char *dmi_sub) {
 	char *pos = strstr(dmi_name, dmi_sub);
 	if (pos) {
@@ -995,14 +1005,26 @@ obtain_custom_fan_speed:
 	}
 
 	// AORUS VG, Gaming (2025+) and all Aero X16 models can eject dGPU
-	// For AORUS models, just check BIOS year for now until we have a better way
 	if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY), "GIGABYTE AERO") ||
 		!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY), "GIGABYTE GAMING")) {
 		gigabyte->has_dgpu_ejector = 1;
 	}
 	else if (!strcmp(dmi_get_system_info(DMI_PRODUCT_FAMILY), "AORUS") &&
 		dmi_get_bios_year() >= 2024) {
+		// Specifically check if we are on any of the AORUS VG models.
+		// This filters out all VF models, as some have BIOS updates released
+		// in 2024.
+		if (dmi_check_system(gigabyte_laptop_dgpu_ejector_needed)) {
 		gigabyte->has_dgpu_ejector = 1;
+		}
+		// AORUS 16X can eject dGPU
+		else if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0) {
+			gigabyte->has_dgpu_ejector = 1;
+		}
+		// Covers AORUS Elite/Master models
+		else if (dmi_get_bios_year() >= 2025) {
+			gigabyte->has_dgpu_ejector = 1;
+		}
 	}
 
 	// Finally, check for quirks in the system
