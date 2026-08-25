@@ -889,6 +889,17 @@ static int find_str(const char *dmi_name, const char *dmi_sub) {
 	return -1;
 }
 
+static int check_sku(const char *dmi_sku, const char *end) {
+	u8 length = strlen(dmi_sku);
+
+	char last_char = dmi_sku[length - 1];
+	if (last_char == end[0]) {
+		pr_info("Found %s in %s\n", end, dmi_sku);
+		return 0;
+	}
+	return -1;
+}
+
 /* Driver init ********************************************/
 
 static int gigabyte_laptop_probe(struct device *dev)
@@ -973,12 +984,17 @@ obtain_custom_fan_speed:
 		We should check if the model we are using supports this, and if not, we
 		will simply fall back to the old way of setting the fan speed.
 	*/
-	ret = gigabyte_laptop_get_devstate(CPU_FAN_DUTY, &output);
-	if (ret)
-		return ret;
-	else if (output) {
-		pr_info("Dual fan speed control required\n");
-		gigabyte->dual_fan_speed_enabled = 1;
+	if (dmi_get_bios_year() >= 2020) {
+		// Since VA/VB/VC models have 2020 as BIOS year, check SKU
+		if (!check_sku(dmi_get_system_info(DMI_PRODUCT_SKU), "B") ||
+			!check_sku(dmi_get_system_info(DMI_PRODUCT_SKU), "C")) {
+			pr_info("Dual fan speed control required\n");
+			gigabyte->dual_fan_speed_enabled = 1;
+		}
+		else if (dmi_get_bios_year() > 2020) { // VD and later
+			pr_info("Dual fan speed control required\n");
+			gigabyte->dual_fan_speed_enabled = 1;
+		}
 	}
 
 	ret = gigabyte_laptop_get_devstate(CHARGING_MODE, &output);
