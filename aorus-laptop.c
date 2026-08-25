@@ -195,6 +195,7 @@ static u16 convert_fan_rpm(int val)
 static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sensor_types type,
 					u32 attr, int channel)
 {
+	struct gigabyte_laptop_wmi *gigabyte = platform_get_drvdata(platform_device);
 	switch (type) {
 		case hwmon_temp:
 			switch (attr) {
@@ -207,7 +208,20 @@ static umode_t gigabyte_laptop_hwmon_is_visible(const void *data, enum hwmon_sen
 		case hwmon_fan:
 			switch (attr) {
 				case hwmon_fan_input:
-					return 0444;
+					switch (channel) {
+						case 2:
+							if (gigabyte->has_three_fans || gigabyte->has_four_fans)
+								return 0444;
+							else
+								return 0;
+						case 3:
+							if (gigabyte->has_four_fans)
+								return 0444;
+							else
+								return 0;
+						default:
+							return 0444;
+					}
 				default:
 					break;
 			}
