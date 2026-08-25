@@ -1029,7 +1029,7 @@ obtain_custom_fan_speed:
 		// This filters out all VF models, as some have BIOS updates released
 		// in 2024.
 		if (dmi_check_system(gigabyte_laptop_dgpu_ejector_needed)) {
-		gigabyte->has_dgpu_ejector = 1;
+			gigabyte->has_dgpu_ejector = 1;
 		}
 		// AORUS 16X can eject dGPU
 		else if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0) {
