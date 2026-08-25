@@ -1043,7 +1043,6 @@ obtain_custom_fan_speed:
 
 	// Finally, check for quirks in the system
 	if (dmi_check_system(gigabyte_laptop_quirks_needed)) {
-		pr_info("Laptop has known issues, using quirks\n");
 		if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0 ||
 			(find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17") == 0 &&
 			dmi_get_bios_year() >= 2023)) {
