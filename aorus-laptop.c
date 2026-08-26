@@ -1059,15 +1059,15 @@ obtain_custom_fan_speed:
 
 	// Finally, check for quirks in the system
 	if (dmi_check_system(gigabyte_laptop_quirks_needed)) {
-		if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0 ||
-			(find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17") == 0 &&
-			dmi_get_bios_year() >= 2023)) {
-			gigabyte->has_three_fans = 1;
-		}
-		else if ((find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17X") == 0 &&
+		if ((find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17X") == 0 &&
 			dmi_get_bios_year() >= 2023) ||
 			find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS Master 18") == 0) {
 			gigabyte->has_four_fans = 1;
+		}
+		else if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0 ||
+			(find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17") == 0 &&
+			dmi_get_bios_year() >= 2023)) {
+			gigabyte->has_three_fans = 1;
 		}
 	}
 
