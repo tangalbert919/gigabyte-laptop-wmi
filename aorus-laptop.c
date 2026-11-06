@@ -93,6 +93,7 @@ struct gigabyte_laptop_wmi {
 	u8 has_dgpu_ejector;
 	u8 has_three_fans;
 	u8 has_four_fans;
+	u8 is_aorus_17x_vf;
 };
 
 enum fan_ctrl {
@@ -292,10 +293,17 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 		case hwmon_pwm:
 			switch (attr) {
 				case hwmon_pwm_input:
-					ret = gigabyte_laptop_get_devstate(fan_pwm_channels[channel], &output);
-					if (ret)
-						break;
-					*val = output;
+					if (channel == 1 && gigabyte->is_aorus_17x_vf) {
+						ret = ec_read(0xB4, &result);
+						if (ret)
+							break;
+						*val = result;
+					} else {
+						ret = gigabyte_laptop_get_devstate(fan_pwm_channels[channel], &output);
+						if (ret)
+							break;
+						*val = output;
+					}
 					break;
 				case hwmon_pwm_enable:
 					if (gigabyte->fan_mode < 3) // normal, gaming, silent
@@ -513,7 +521,7 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 
 	gigabyte = dev_get_drvdata(dev);
 	// On some models, FAN_CUSTOM_SPEED will only set CPU fan speed.
-	if (gigabyte->dual_fan_speed_enabled) {
+	if (gigabyte->dual_fan_speed_enabled && !gigabyte->is_aorus_17x_vf) {
 		ret = gigabyte_laptop_set_devstate(GPU_FAN_DUTY, speed, &output);
 		if (ret)
 			return ret;
@@ -892,6 +900,13 @@ static const struct dmi_system_id gigabyte_laptop_dgpu_ejector_needed[] = {
 	{ }
 };
 
+// The AORUS 17X VF models are...special, to say the least.
+static const struct dmi_system_id gigabyte_laptop_aorus_vf[] = {
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AZF"),
+	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AXF"),
+	{ }
+};
+
 static int find_str(const char *dmi_name, const char *dmi_sub) {
 	char *pos = strstr(dmi_name, dmi_sub);
 	if (pos) {
@@ -1075,6 +1090,8 @@ obtain_custom_fan_speed:
 			dmi_get_bios_year() >= 2023) ||
 			find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS Master 18") == 0) {
 			gigabyte->has_four_fans = 1;
+			if (dmi_check_system(gigabyte_laptop_aorus_vf))
+				gigabyte->is_aorus_17x_vf = 1;
 		}
 		else if (find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 16X") == 0 ||
 			(find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17") == 0 &&
