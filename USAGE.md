@@ -37,7 +37,7 @@ echo '2' | sudo tee /sys/devices/platform/aorus_laptop/fan_mode
 
 Aero/AORUS laptops support setting a custom fan speed. However, this only takes effect if either auto or fixed mode is enabled.
 
-As of version 0.2.0, the accepted range is 0-255. Earlier versions require fulfilling the following conditions:
+As of version 0.2.0, the accepted range is 0-229. Earlier versions require fulfilling the following conditions:
 
 - The number between 25 and 100.
 - The number is divisible by 5.
@@ -48,7 +48,7 @@ As of version 0.2.0, the accepted range is 0-255. Earlier versions require fulfi
 
 ```sh
 # Version 0.2.0+
-echo '128' | sudo tee /sys/devices/platform/aorus_laptop/fan_custom_speed
+echo '114' | sudo tee /sys/devices/platform/aorus_laptop/fan_custom_speed
 # Before version 0.2.0
 echo '50' | sudo tee /sys/devices/platform/aorus_laptop/fan_custom_speed
 ```

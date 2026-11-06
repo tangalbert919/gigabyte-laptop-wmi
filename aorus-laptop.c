@@ -501,6 +501,12 @@ static ssize_t fan_custom_speed_store(struct device *dev, struct device_attribut
 	if (ret)
 		return ret;
 
+	// Max fan speed is 229, anything higher is 0 to the controller.
+	if (speed > 229) {
+		pr_err("Invalid fan speed\n");
+		return -EINVAL;
+	}
+
 	ret = gigabyte_laptop_set_devstate(FAN_CUSTOM_SPEED, speed, &output);
 	if (ret)
 		return ret;
@@ -686,6 +692,12 @@ static ssize_t fan_curve_data_store(struct device *dev, struct device_attribute 
 	ret = kstrtou16(buf, 0, &data);
 	if (ret)
 		return ret;
+
+	// Check speed before sending payload. Cannot exceed 229.
+	if (data >> 8 > 229) {
+		pr_err("Invalid fan speed\n");
+		return -EINVAL;
+	}
 
 	gigabyte = dev_get_drvdata(dev);
 	// likely payload: speed, temp, index
