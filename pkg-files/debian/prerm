@@ -6,7 +6,7 @@ VERSION=0.2.0
 set -e
 
 case "$1" in
-    remove|upgrade|dconfigure)
+    remove|upgrade|deconfigure)
         if [ "`dkms status -m $NAME`"]; then
             dkms remove -m $NAME -v $VERSION --all
         fi
