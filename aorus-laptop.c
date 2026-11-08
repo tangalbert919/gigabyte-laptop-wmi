@@ -422,7 +422,17 @@ static int set_fan_mode(struct gigabyte_laptop_wmi *gigabyte, u32 fan_mode)
 		}
 	} else if (fan_mode == FAN_CUSTOM_MODE) {
 		if (gigabyte->fan_mode > 3) {
-			pr_warn("Custom mode is already enabled\n");
+			if (gigabyte->fan_mode == 4) {
+				// Auto-maximum mode can only be turned off through gaming or silent mode
+				ret = gigabyte_laptop_set_devstate(FAN_GAMING_MODE, 0, &result);
+				if (ret)
+					return ret;
+			} else {
+				ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
+				if (ret)
+					return ret;
+			}
+			// No need to set custom mode, it's already enabled
 			return 0;
 		} else if (gigabyte->fan_mode > 0) {
 			ret = gigabyte_laptop_set_devstate(fan_modes[gigabyte->fan_mode], 0, &result);
