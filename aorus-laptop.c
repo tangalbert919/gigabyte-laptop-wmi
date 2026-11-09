@@ -1094,7 +1094,14 @@ obtain_custom_fan_speed:
 		}
 	}
 
-	// Finally, check for quirks in the system
+	return 0;
+}
+
+static void gigabyte_laptop_hwmon_preinit(struct device *dev)
+{
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	// Set these before HWMON is initialized
 	if (dmi_check_system(gigabyte_laptop_quirks_needed)) {
 		if ((find_str(dmi_get_system_info(DMI_PRODUCT_NAME), "AORUS 17X") == 0 &&
 			dmi_get_bios_year() >= 2023) ||
@@ -1109,8 +1116,6 @@ obtain_custom_fan_speed:
 			gigabyte->has_three_fans = 1;
 		}
 	}
-
-	return 0;
 }
 
 static struct platform_driver platform_driver = {
@@ -1182,6 +1187,8 @@ static int __init gigabyte_laptop_init(void)
 					&gigabyte_laptop_attr_group);
 	if (result)
 		goto fail_sysfs;
+
+	gigabyte_laptop_hwmon_preinit(&gigabyte->pdev->dev);
 
 	gigabyte->hwmon_dev = hwmon_device_register_with_info(&gigabyte->pdev->dev,
 			GIGABYTE_LAPTOP_FILE, gigabyte, &gigabyte_laptop_chip_info, NULL);
