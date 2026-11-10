@@ -97,7 +97,6 @@ struct gigabyte_laptop_wmi {
 };
 
 enum fan_ctrl {
-	AORUS_FAN_CTRL_DISABLED = 0,
 	AORUS_FAN_CTRL_AUTO = 1,
 	AORUS_FAN_CTRL_MANUAL = 2
 };
@@ -307,10 +306,8 @@ static int gigabyte_laptop_hwmon_read(struct device *dev, enum hwmon_sensor_type
 					break;
 				case hwmon_pwm_enable:
 					if (gigabyte->fan_mode < 3) // normal, gaming, silent
-						*val = AORUS_FAN_CTRL_DISABLED;
-					else if (gigabyte->fan_mode > 3) // auto-max or fixed
 						*val = AORUS_FAN_CTRL_AUTO;
-					else // the fan curve
+					else // custom mode
 						*val = AORUS_FAN_CTRL_MANUAL;
 					break;
 				default:
