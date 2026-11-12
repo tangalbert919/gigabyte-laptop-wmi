@@ -56,6 +56,7 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 #define TEMP_GPU         0xE2
 #define FAN_CPU_RPM      0xE4
 #define FAN_GPU_RPM      0xE5
+#define GPU_MUX_MODE     0xE6 // Aero X16: stored display mode, applied at power-on
 #define FAN_THREE_RPM    0xE8 // 2023 AORUS 17
 #define FAN_FOUR_RPM     0xE9 // 2023 AORUS 17X
 #define LIGHT_SENSOR     0xF7 // WARNING: Behavior changes in VE models
@@ -68,6 +69,18 @@ MODULE_VERSION(GIGABYTE_LAPTOP_VERSION);
 
 // Fan curves
 #define FAN_CURVE_POINTS 15
+
+/* Embedded controller registers (not reachable through WMI) */
+// Aero X16: bit 4 (EDPW in the DSDT) routes the internal panel, 1 = dGPU, 0 = iGPU
+#define EC_PANEL_MUX_REG 0x23
+#define EC_PANEL_MUX_BIT 0x10
+
+static bool force_display_mux;
+module_param(force_display_mux, bool, 0444);
+MODULE_PARM_DESC(force_display_mux,
+	"Enable the gpu_mux_mode and panel_mux nodes on a model that is not in the tested list "
+	"(default: off). For testing only: panel_mux writes bit 4 of embedded controller "
+	"register 0x23, which may have a different meaning on other models.");
 
 struct fan_curve_data {
 	u8 temperature[FAN_CURVE_POINTS];
@@ -94,6 +107,7 @@ struct gigabyte_laptop_wmi {
 	u8 has_three_fans;
 	u8 has_four_fans;
 	u8 is_aorus_17x_vf;
+	u8 has_display_mux;
 };
 
 enum fan_ctrl {
@@ -178,6 +192,23 @@ static int gigabyte_laptop_set_devstate(u32 method_id, u32 arg2, int *result)
 	}
 	kfree(obj);
 	return 0;
+}
+
+/* Embedded controller ************************************/
+
+/*
+ * Direct access to the embedded controller's RAM, for values that have no WMI
+ * method. Only these two helpers know how the byte is reached, so the access
+ * method can be swapped here.
+ */
+static int gigabyte_laptop_ec_read_byte(u8 offset, u8 *val)
+{
+	return ec_read(offset, val);
+}
+
+static int gigabyte_laptop_ec_write_byte(u8 offset, u8 val)
+{
+	return ec_write(offset, val);
 }
 
 /* hwmon **************************************************/
@@ -654,6 +685,129 @@ static ssize_t gpu_boost_store(struct device *dev, struct device_attribute *attr
 	return count;
 }
 
+/*
+ * GPU mux mode. This is the display mode stored in the firmware, which reads
+ * it at power-on only: a change takes effect after a reboot.
+ * 0 = Dynamic (Gigabyte's name; on the Aero X16 the panel stays on the iGPU)
+ * 1 = Discrete (panel on the dGPU from power-on)
+ * 2 = MsHybrid
+ */
+static ssize_t gpu_mux_mode_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret, output;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	if (!gigabyte->has_display_mux)
+		return -ENODEV;
+
+	ret = gigabyte_laptop_get_devstate(GPU_MUX_MODE, &output);
+	if (ret)
+		return ret;
+
+	// Newer firmware sets bit 7 of the stored byte as a marker, so mask it out.
+	return sysfs_emit(buf, "%d\n", output & 0x7F);
+}
+
+static ssize_t gpu_mux_mode_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret, output;
+	unsigned int mode;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	if (!gigabyte->has_display_mux)
+		return -ENODEV;
+
+	ret = kstrtouint(buf, 0, &mode);
+	if (ret)
+		return ret;
+
+	if (mode > 2) {
+		pr_err("Invalid GPU mux mode\n");
+		return -EINVAL;
+	}
+
+	// The firmware only stores the byte here and may not return a value,
+	// so read the mode back instead of relying on the result.
+	ret = gigabyte_laptop_set_devstate(GPU_MUX_MODE, mode, &output);
+	if (ret && ret != -EINVAL)
+		return ret;
+
+	ret = gigabyte_laptop_get_devstate(GPU_MUX_MODE, &output);
+	if (ret)
+		return ret;
+	if ((output & 0x7F) != mode)
+		return -EIO;
+
+	return count;
+}
+
+/*
+ * Panel mux, switched at runtime through the embedded controller.
+ * 0 = internal panel on the iGPU
+ * 1 = internal panel on the dGPU
+ *
+ * Intended use: hand the panel to a dGPU that is not driven by this system
+ * (e.g. passed through to a virtual machine) and take it back afterwards.
+ *
+ * - There is no hot-plug signal. The GPU that receives the panel has to
+ *   re-train its link (switch its output off and on, or restart its driver).
+ * - If the dGPU is not driving its eDP output, the panel stays dark while
+ *   this is 1.
+ * - The firmware resets the bit from the stored mode (gpu_mux_mode) at every
+ *   boot.
+ */
+static ssize_t panel_mux_show(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	int ret;
+	u8 reg;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	if (!gigabyte->has_display_mux)
+		return -ENODEV;
+
+	ret = gigabyte_laptop_ec_read_byte(EC_PANEL_MUX_REG, &reg);
+	if (ret)
+		return ret;
+
+	return sysfs_emit(buf, "%d\n", !!(reg & EC_PANEL_MUX_BIT));
+}
+
+static ssize_t panel_mux_store(struct device *dev, struct device_attribute *attr, const char *buf, size_t count)
+{
+	int ret;
+	u8 reg;
+	unsigned int mux;
+	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
+
+	if (!gigabyte->has_display_mux)
+		return -ENODEV;
+
+	ret = kstrtouint(buf, 0, &mux);
+	if (ret)
+		return ret;
+
+	if (mux > 1) {
+		pr_err("Invalid panel mux state\n");
+		return -EINVAL;
+	}
+
+	// Only bit 4 routes the panel, the firmware uses other bits of this register.
+	ret = gigabyte_laptop_ec_read_byte(EC_PANEL_MUX_REG, &reg);
+	if (ret)
+		return ret;
+
+	if (mux)
+		reg |= EC_PANEL_MUX_BIT;
+	else
+		reg &= ~EC_PANEL_MUX_BIT;
+
+	ret = gigabyte_laptop_ec_write_byte(EC_PANEL_MUX_REG, reg);
+	if (ret)
+		return ret;
+
+	return count;
+}
+
 static ssize_t fan_curve_index_show(struct device *dev, struct device_attribute *attr, char *buf)
 {
 	struct gigabyte_laptop_wmi *gigabyte = dev_get_drvdata(dev);
@@ -817,6 +971,8 @@ static DEVICE_ATTR_RO(fan_pwm);
 static DEVICE_ATTR_RW(charge_mode);
 static DEVICE_ATTR_RW(charge_limit);
 static DEVICE_ATTR_RW(gpu_boost);
+static DEVICE_ATTR_RW(gpu_mux_mode);
+static DEVICE_ATTR_RW(panel_mux);
 static DEVICE_ATTR_RW(fan_curve_index);
 static DEVICE_ATTR_RW(fan_curve_data);
 static DEVICE_ATTR_RO(battery_cycle);
@@ -834,6 +990,8 @@ static struct attribute *gigabyte_laptop_attributes[] = {
 	&dev_attr_usb_charge_s3_toggle.attr,
 	&dev_attr_usb_charge_s4_toggle.attr,
 	&dev_attr_gpu_boost.attr,
+	&dev_attr_gpu_mux_mode.attr,
+	&dev_attr_panel_mux.attr,
 	&dev_attr_fan_curve_index.attr,
 	&dev_attr_fan_curve_data.attr,
 	&dev_attr_battery_cycle.attr,
@@ -904,6 +1062,26 @@ static const struct dmi_system_id gigabyte_laptop_dgpu_ejector_needed[] = {
 static const struct dmi_system_id gigabyte_laptop_aorus_vf[] = {
 	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AZF"),
 	DMI_MATCH_GIGABYTE_LAPTOP_NAME("AORUS 17X AXF"),
+	{ }
+};
+
+/*
+ * Models on which gpu_mux_mode and panel_mux were tested on real hardware.
+ * Only the exact product name is matched on purpose.
+ *
+ * Tested: GIGABYTE AERO X16 2WH (BIOS FB05 and FB06).
+ *
+ * Assumed to behave the same, but NOT tested and therefore not listed
+ * (use force_display_mux=1 at your own risk and please report back):
+ *   AERO X16 1WH, 1TH, 1VH - Gigabyte ships one firmware image for all four
+ *   AERO X16 variants (FB07 carries all four product names), and the power-on
+ *   code that sets the panel bit from the stored mode is in that shared image.
+ *   For the 1WH the stored mode (method 0xE6) has been used by others,
+ *   including a boot in Discrete mode; panel_mux has not been tried there.
+ * Nothing is known about any other Aero or AORUS model.
+ */
+static const struct dmi_system_id gigabyte_laptop_display_mux_tested[] = {
+	DMI_EXACT_MATCH_GIGABYTE_LEGACY_DEVICE("GIGABYTE AERO X16 2WH"),
 	{ }
 };
 
@@ -1082,6 +1260,15 @@ obtain_custom_fan_speed:
 		else if (dmi_get_bios_year() >= 2025) {
 			gigabyte->has_dgpu_ejector = 1;
 		}
+	}
+
+	// Display mux nodes: only on the model they were tested on, unless forced
+	if (dmi_check_system(gigabyte_laptop_display_mux_tested)) {
+		gigabyte->has_display_mux = 1;
+	}
+	else if (force_display_mux) {
+		pr_warn("gpu_mux_mode and panel_mux forced on, this model is not in the tested list\n");
+		gigabyte->has_display_mux = 1;
 	}
 
 	// Finally, check for quirks in the system

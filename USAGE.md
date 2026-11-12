@@ -167,3 +167,56 @@ Aero/AORUS laptops support reading the current PWM for each fan. This should not
 The sysfs and HWMON nodes are read-only, but support for writing to HWMON nodes will be added in the future. The sysfs node will only return the PWM for the CPU fan, while the HWMON nodes have separate channels for CPU and GPU fans.
 
 **Node:** `/sys/devices/platform/aorus_laptop/fan_pwm`
+
+## Display mux (GIGABYTE AERO X16 2WH only)
+
+The two nodes in this section are enabled **only on the GIGABYTE AERO X16 2WH**, the one model they were tested on (two units, BIOS FB05 and FB06). The driver matches the exact product name. On every other model both nodes return "No such device".
+
+**Models we assume to work the same, without any guarantee.** We have not tested them and the driver does not enable the nodes there:
+
+| Model | Why we assume it | What is known |
+|---|---|---|
+| AERO X16 1WH | Gigabyte ships one firmware image for all four AERO X16 variants; the code that routes the panel is in that shared image | The stored mode (`gpu_mux_mode` below) has been used on this model by others, including a boot in Discrete mode. `panel_mux` has not been tried. |
+| AERO X16 1TH | same shared firmware image | nothing tested |
+| AERO X16 1VH | same shared firmware image | nothing tested |
+
+For any other Aero or AORUS model we know nothing. To try the nodes on a model that is not enabled, load the module with `force_display_mux=1`. `panel_mux` then writes one bit of the embedded controller directly, and the same bit may do something else on another model. If you try it, please report what happened, with model name and BIOS version.
+
+### GPU mux mode
+
+The Aero X16 has a display mux in front of the internal panel. The firmware stores a display mode and applies it at power-on, so a change only takes effect after a reboot. The modes are named after Gigabyte's own software:
+
+- `0`: Dynamic (on the Aero X16 2WH, the panel stays on the integrated GPU)
+- `1`: Discrete (the panel is on the discrete GPU)
+- `2`: MsHybrid
+
+Discrete mode changes which GPU owns the internal panel from power-on. The Type-C display outputs stay on the integrated GPU. Make sure your system can show a picture through the discrete GPU before you reboot into this mode.
+
+Reading this node was tested (both units read `0`). Writing it and booting in another mode was **not** tested by us.
+
+**Node:** `/sys/devices/platform/aorus_laptop/gpu_mux_mode`
+
+**Example:** To use discrete mode from the next boot:
+
+```sh
+echo '1' | sudo tee /sys/devices/platform/aorus_laptop/gpu_mux_mode
+```
+
+### Panel mux
+
+The Aero X16 2WH can also switch the display mux while the system is running. This goes through the embedded controller, not through the stored mode above: `0` puts the internal panel on the integrated GPU, and `1` puts it on the discrete GPU. The switch is immediate (the write takes about 10 ms).
+
+This is meant for handing the panel to a discrete GPU that the running system does not use itself, e.g. one that is passed through to a virtual machine, and for taking it back afterwards. Keep the following in mind:
+
+- Neither GPU gets a hot-plug signal. The GPU that receives the panel has to re-train its link before a picture appears (switch its output off and on, or restart its graphics driver). Expect one to two seconds without a picture.
+- If the discrete GPU is not driving its internal display output, the panel shows nothing while this is set to `1`. Have a way to write `0` again without seeing the screen (a key binding, a timer, SSH).
+- The firmware resets this from the stored GPU mux mode at every boot.
+
+**Node:** `/sys/devices/platform/aorus_laptop/panel_mux`
+
+**Example:** To route the internal panel to the discrete GPU, and back:
+
+```sh
+echo '1' | sudo tee /sys/devices/platform/aorus_laptop/panel_mux
+echo '0' | sudo tee /sys/devices/platform/aorus_laptop/panel_mux
+```
