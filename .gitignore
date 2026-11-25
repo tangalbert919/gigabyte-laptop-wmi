@@ -1,6 +1,10 @@
 # Prerequisites
 *.d
 
+# Nix
+result
+result-*
+
 # Object files
 *.o
 *.ko

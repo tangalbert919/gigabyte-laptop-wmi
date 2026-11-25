@@ -33,6 +33,8 @@ The following models are not supported:
 
 ## Installation/Usage
 
+NixOS: this repository is a flake - add `inputs.gigabyte-laptop-wmi.url = "github:tangalbert919/gigabyte-laptop-wmi";`, import `nixosModules.default` and set `hardware.gigabyte-laptop.enable = true;` (see [INSTALL.md](INSTALL.md)).
+
 Refer to [INSTALL.md](INSTALL.md) and [USAGE.md](USAGE.md). You can also check
 the [wiki](https://github.com/tangalbert919/gigabyte-laptop-wmi/wiki) on how to
 install and use this kernel driver.
